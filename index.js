@@ -25,9 +25,10 @@ client.on("message", (channel, tags, message, self) => {
 
   if (message.toLowerCase().startsWith("!task ")) {
     const tasks = message.slice(6); // Quitar "!task "
-    const taskList = tasks.split(",").map((task) => task.trim());
-
-    console.log(...taskList);
+    const taskList = tasks
+      .toUpperCase()
+      .split(",")
+      .map((task) => task.trim());
 
     client
       .say(
