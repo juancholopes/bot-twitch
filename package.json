@@ -1,25 +1,29 @@
 {
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "fg": "^0.0.3",
-    "fs": "0.0.1-security",
-    "tmi.js": "^1.8.5"
-  },
-  "name": "bot-twich",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "devDependencies": {
-    "nodemon": "^3.1.10"
-  },
-  "scripts": {
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+	"dependencies": {
+		"cors": "^2.8.5",
+		"dotenv": "^17.2.2",
+		"express": "^5.1.0",
+		"fg": "^0.0.3",
+		"fs": "0.0.1-security",
+		"tmi.js": "^1.8.5"
+	},
+	"name": "bot-twich",
+	"version": "1.0.0",
+	"description": "",
+	"main": "app.js",
+	"devDependencies": {
+		"@biomejs/biome": "^2.2.3",
+		"nodemon": "^3.1.10"
+	},
+	"scripts": {
+		"start": "node app.js",
+		"dev": "nodemon app.js",
+		"lint": "biome check ./src",
+		"lint:fix": "biome check --apply ./src",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"type": "commonjs"
 }
