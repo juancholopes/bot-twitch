@@ -6,6 +6,7 @@ class TaskService {
 	constructor() {
 		this.dataFile = path.resolve(config.tasks.dataFile);
 		this.ensureDataFileExists();
+		this.emitter = null;
 	}
 
 	ensureDataFileExists() {
@@ -16,6 +17,10 @@ class TaskService {
 		if (!fs.existsSync(this.dataFile)) {
 			fs.writeFileSync(this.dataFile, JSON.stringify([], null, 2));
 		}
+	}
+
+	setEmitter(emitter) {
+		this.emitter = emitter;
 	}
 
 	readTasks() {
@@ -31,6 +36,9 @@ class TaskService {
 	writeTasks(users) {
 		try {
 			fs.writeFileSync(this.dataFile, JSON.stringify(users, null, 2));
+			if (this.emitter) {
+				this.emitter('tasksUpdated');
+			}
 			return true;
 		} catch (error) {
 			console.error("Error writing tasks file:", error);
