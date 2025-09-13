@@ -6,13 +6,14 @@
 	"scripts": {
 		"start": "node app.js",
 		"dev": "nodemon app.js",
+		"dev:full": "concurrently \"pnpm dev\" \"pnpm overlay:dev\"",
 		"lint": "biome check ./src",
 		"lint:fix": "biome check --apply ./src",
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"overlay:dev": "vite --config obs-overlay/vite.config.js",
-		"overlay:build": "vite build --config obs-overlay/vite.config.js",
-		"overlay:lint": "eslint obs-overlay",
-		"overlay:preview": "vite preview --config obs-overlay/vite.config.js"
+		"overlay:dev": "vite --config vite.overlay.config.js",
+		"overlay:build": "vite build --config vite.overlay.config.js",
+		"overlay:lint": "cd obs-overlay && eslint .",
+		"overlay:preview": "vite preview --config vite.overlay.config.js"
 	},
 	"keywords": [],
 	"author": "",
@@ -38,6 +39,7 @@
 		"@types/react": "^19.1.10",
 		"@types/react-dom": "^19.1.7",
 		"@vitejs/plugin-react": "^5.0.0",
+		"concurrently": "^9.1.0",
 		"eslint": "^9.33.0",
 		"eslint-plugin-react-hooks": "^5.2.0",
 		"eslint-plugin-react-refresh": "^0.4.20",
