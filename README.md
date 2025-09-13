@@ -1,60 +1,60 @@
-# Bot de Twitch - Sistema de Tareas
+# Twitch Bot - Task Management System
 
-Un bot modular para Twitch que permite a los usuarios gestionar sus tareas diarias directamente desde el chat.
+A modular bot for Twitch that allows users to manage their daily tasks directly from the chat.
 
-## 🚀 Características
+## Features
 
-- ✅ Agregar tareas personales (`!task`)
-- 📋 Ver tareas pendientes (`!mytasks` o `!list`)
-- ✅ Marcar tareas como completadas (`!done`)
-- 🧹 Limpiar tareas completadas (`!cleardone`)
-- 🗑️ Eliminar todas las tareas (solo streamer) (`!delete`)
-- 👋 Comando de saludo (`!hello`)
+- Add personal tasks (`!task`)
+- View pending tasks (`!mytasks` or `!list`)
+- Mark tasks as completed (`!done`)
+- Clear completed tasks (`!cleardone`)
+- Delete all tasks (streamer only) (`!delete`)
+- Greeting command (`!hello`)
 
-## 📁 Estructura del Proyecto
+## Project Structure
 
 ```
 bot-twich/
-├── app.js                  # Punto de entrada principal
+├── app.js                  # Main entry point
 ├── src/
-│   ├── bot.js             # Lógica principal del bot de Twitch
-│   ├── server.js          # Servidor web Express
+│   ├── bot.js             # Main Twitch bot logic
+│   ├── server.js          # Express web server
 │   ├── config/
-│   │   └── environment.js  # Configuración y variables de entorno
+│   │   └── environment.js  # Configuration and environment variables
 │   ├── services/
-│   │   └── taskService.js  # Servicio para gestión de tareas
+│   │   └── taskService.js  # Task management service
 │   ├── commands/
-│   │   ├── index.js       # Exportador de comandos
-│   │   ├── mytasks.js     # Comando !mytasks
-│   │   ├── task.js        # Comando !task
-│   │   ├── done.js        # Comando !done
-│   │   ├── cleardone.js   # Comando !cleardone
-│   │   ├── delete.js      # Comando !delete
-│   │   └── hello.js       # Comando !hello
+│   │   ├── index.js       # Command exporter
+│   │   ├── mytasks.js     # !mytasks command
+│   │   ├── task.js        # !task command
+│   │   ├── done.js        # !done command
+│   │   ├── cleardone.js   # !cleardone command
+│   │   ├── delete.js      # !delete command
+│   │   └── hello.js       # !hello command
 │   └── utils/
-│       ├── logger.js      # Sistema de logging
-│       └── helpers.js     # Funciones auxiliares
+│       ├── logger.js      # Logging system
+│       └── helpers.js     # Helper functions
 ├── data/
-│   └── tasks.json         # Almacenamiento de tareas
-├── .env                   # Variables de entorno
+│   └── tasks.json         # Task storage
+├── .env                   # Environment variables
 └── package.json
 ```
 
-## 🛠️ Instalación y Configuración
+## Installation and Configuration
 
-1. **Clonar el repositorio**
+1. **Clone the repository**
    ```bash
    git clone <repository-url>
    cd bot-twich
    ```
 
-2. **Instalar dependencias**
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-3. **Configurar variables de entorno**
-   Crear archivo `.env` con:
+3. **Configure environment variables**
+   Create a `.env` file with:
    ```env
    PORT=3000
    OAUTH_TOKEN=oauth:your_oauth_token
@@ -65,99 +65,87 @@ bot-twich/
    CHANEL_NAME=your_channel_name
    ```
 
-4. **Ejecutar la aplicación**
+4. **Run the application**
    ```bash
    npm start
-   # o para desarrollo
+   # or for development
    npm run dev
    ```
 
-## 📝 Comandos Disponibles
+## Available Commands
 
-### Para Usuarios
+### For Users
 
-| Comando | Descripción | Ejemplo |
+| Command | Description | Example |
 |---------|-------------|---------|
-| `!task <tareas>` | Agregar nuevas tareas (máx. 5 por usuario) | `!task estudiar, hacer ejercicio` |
-| `!mytasks` / `!list` | Ver tareas pendientes | `!mytasks` |
-| `!done <números>` | Marcar tareas como completadas | `!done 1, 2, 3` |
-| `!cleardone` | Limpiar tareas completadas | `!cleardone` |
-| `!hello` | Saludo del bot | `!hello` |
+| `!task <tasks>` | Add new tasks (max. 5 per user) | `!task study, exercise` |
+| `!mytasks` / `!list` | View pending tasks | `!mytasks` |
+| `!done <numbers>` | Mark tasks as completed | `!done 1, 2, 3` |
+| `!cleardone` | Clear completed tasks | `!cleardone` |
+| `!hello` | Bot greeting | `!hello` |
 
-### Para Streamer
+### For Streamer
 
-| Comando | Descripción | Ejemplo |
+| Command | Description | Example |
 |---------|-------------|---------|
-| `!delete` | Eliminar todas las tareas de todos los usuarios | `!delete` |
+| `!delete` | Delete all tasks for all users | `!delete` |
 
-## 🎯 Reglas del Sistema
+## System Rules
 
-- **Máximo 5 tareas por usuario** (incluyendo completadas)
-- **Máximo 5 tareas por comando** al agregar
-- Las tareas se almacenan en mayúsculas internamente
-- Se muestran en minúsculas al usuario
-- El comando `!cleardone` libera espacio para nuevas tareas
+- **Maximum 5 tasks per user** (including completed)
+- **Maximum 5 tasks per command** when adding
+- Tasks are stored in uppercase internally
+- Displayed in lowercase to the user
+- The `!cleardone` command frees up space for new tasks
 
-## 🗂️ Estructura de Datos
+## Data Structure
 
 ```json
 [
   {
     "user": "username",
-    "task": ["TAREA1", "TAREA2"],
-    "completed": ["TAREA_COMPLETADA"]
+    "task": ["TASK1", "TASK2"],
+    "completed": ["COMPLETED_TASK"]
   }
 ]
 ```
 
-## 🔧 Desarrollo
+## Development
 
-### Principios Aplicados
+### Applied Principles
 
-- **Separación de responsabilidades**: Cada módulo tiene una función específica
-- **Código limpio**: Funciones pequeñas y con nombres descriptivos
-- **Manejo de errores**: Try-catch en todas las operaciones críticas
-- **Logging**: Sistema de logs estructurado
-- **Configuración centralizada**: Variables de entorno y configuración en un solo lugar
+- **Separation of concerns**: Each module has a specific function
+- **Clean code**: Small functions with descriptive names
+- **Error handling**: Try-catch in all critical operations
+- **Logging**: Structured logging system
+- **Centralized configuration**: Environment variables and configuration in one place
 
-### Agregar Nuevos Comandos
+### Adding New Commands
 
-1. Crear archivo en `src/commands/nuevo-comando.js`
-2. Implementar la función handler
-3. Exportar en `src/commands/index.js`
-4. Agregar lógica de routing en `src/bot.js`
+1. Create file in `src/commands/new-command.js`
+2. Implement the handler function
+3. Export in `src/commands/index.js`
+4. Add routing logic in `src/bot.js`
 
 ### Testing
 
 ```bash
-# Ejecutar tests (cuando estén implementados)
+# Run tests (when implemented)
 npm test
 
-# Verificar lint
+# Check lint
 npm run lint
 ```
 
-## 🐛 Debugging
+## Debugging
 
-Los logs se muestran en consola con timestamps y niveles:
-- `INFO`: Operaciones normales
-- `ERROR`: Errores capturados
-- `WARN`: Advertencias
-- `DEBUG`: Información de desarrollo
+Logs are displayed in console with timestamps and levels:
+- `INFO`: Normal operations
+- `ERROR`: Captured errors
+- `WARN`: Warnings
+- `DEBUG`: Development information
 
-## 📊 Endpoints Web
+## Web Endpoints
 
-- `GET /` - Estado general del bot
-- `GET /health` - Health check del servidor
-
-## 🤝 Contribuir
-
-1. Fork del proyecto
-2. Crear rama para feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
+- `GET /` - General bot status
+- `GET /health` - Server health check
