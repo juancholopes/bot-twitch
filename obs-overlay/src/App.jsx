@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { io } from 'socket.io-client';
-import React from 'react';
-import styled, { createGlobalStyle } from 'styled-components';
-import CompactTaskList from './components/CompactTaskList';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { io } from "socket.io-client";
+import styled, { createGlobalStyle } from "styled-components";
+import CompactTaskList from "./components/task/CompactTaskList";
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -68,7 +67,7 @@ const ErrorMessage = styled.div`
   color: white;
   padding: 12px 16px;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 500;
   font-size: 14px;
   backdrop-filter: blur(10px);
@@ -97,7 +96,7 @@ const LoadingIndicator = styled.div`
   color: white;
   padding: 12px 16px;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 500;
   font-size: 14px;
   backdrop-filter: blur(10px);
@@ -107,7 +106,8 @@ const LoadingIndicator = styled.div`
   animation: pulse 2s infinite;
 
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
     50% {
@@ -116,7 +116,7 @@ const LoadingIndicator = styled.div`
   }
 `;
 
-const API_URL = 'http://localhost:3000/api/tasks';
+const API_URL = "http://localhost:3000/api/tasks";
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -127,29 +127,29 @@ function App() {
   useEffect(() => {
     fetchTasks();
 
-    const socket = io('http://localhost:3000', {
-      transports: ['websocket', 'polling'],
+    const socket = io("http://localhost:3000", {
+      transports: ["websocket", "polling"],
       timeout: 5000,
     });
 
-    socket.on('connect', () => {
-      console.log('Connected to WebSocket');
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket");
       setConnected(true);
       setError(null);
     });
 
-    socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket');
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket");
       setConnected(false);
     });
 
-    socket.on('connect_error', (err) => {
-      console.error('WebSocket connection error:', err);
-      setError('Connection failed. Retrying...');
+    socket.on("connect_error", (err) => {
+      console.error("WebSocket connection error:", err);
+      setError("Connection failed. Retrying...");
     });
 
-    socket.on('tasksUpdated', () => {
-      console.log('Tasks updated, fetching new data...');
+    socket.on("tasksUpdated", () => {
+      console.log("Tasks updated, fetching new data...");
       fetchTasks();
     });
 
@@ -168,8 +168,8 @@ function App() {
       setTasks(response.data);
       setLoading(false);
     } catch (err) {
-      console.error('Failed to fetch tasks:', err);
-      setError('Failed to load tasks. Check server connection.');
+      console.error("Failed to fetch tasks:", err);
+      setError("Failed to load tasks. Check server connection.");
       setLoading(false);
     }
   };
@@ -178,7 +178,7 @@ function App() {
   useEffect(() => {
     if (error && !loading) {
       const retryTimer = setTimeout(() => {
-        console.log('Retrying connection...');
+        console.log("Retrying connection...");
         fetchTasks();
       }, 10000);
 
@@ -192,9 +192,9 @@ function App() {
       <Container>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {loading && <LoadingIndicator>Loading tasks...</LoadingIndicator>}
-        
-        <CompactTaskList 
-          tasks={tasks} 
+
+        <CompactTaskList
+          tasks={tasks}
           loading={loading}
           connected={connected}
         />

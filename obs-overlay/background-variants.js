@@ -8,40 +8,40 @@ export const BackgroundVariants = {
     backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(255, 255, 255, 0.3);
   `,
-  
+
   // Blur oscuro
   dark: `
     background: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(255, 255, 255, 0.2);
   `,
-  
+
   // Blur azul gaming
   gaming: `
     background: rgba(30, 144, 255, 0.2) !important;
     backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(30, 144, 255, 0.4);
   `,
-  
+
   // Blur púrpura
   purple: `
     background: rgba(138, 43, 226, 0.2) !important;
     backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(138, 43, 226, 0.4);
   `,
-  
+
   // Blur verde
   green: `
     background: rgba(34, 197, 94, 0.2) !important;
     backdrop-filter: blur(16px) !important;
     border: 1px solid rgba(34, 197, 94, 0.4);
   `,
-  
+
   // Sin blur (solo semi-transparente)
   minimal: `
     background: rgba(0, 0, 0, 0.6) !important;
     border: 1px solid rgba(255, 255, 255, 0.1);
-  `
+  `,
 };
 
 // Para usar una variante, cambia el BlurredBackground así:

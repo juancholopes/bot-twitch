@@ -253,4 +253,3 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
 };
 
 export default CompactTaskList;
-
