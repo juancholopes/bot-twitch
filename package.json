@@ -27,6 +27,7 @@
 		"fg": "^0.0.3",
 		"fs": "0.0.1-security",
 		"socket.io": "^4.8.1",
+		"spotify-web-api-node": "^5.0.2",
 		"tmi.js": "^1.8.5"
 	},
 	"devDependencies": {
