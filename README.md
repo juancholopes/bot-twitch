@@ -43,18 +43,21 @@ bot-twich/
 ## Installation and Configuration
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd bot-twich
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure environment variables**
    Create a `.env` file with:
+
    ```env
    PORT=3000
    OAUTH_TOKEN=oauth:your_oauth_token
@@ -63,9 +66,11 @@ bot-twich/
    CLIENT_SECRET=your_client_secret
    TWITCH_USERNAME=your_bot_username
    CHANEL_NAME=your_channel_name
+   SPOTYFY_CLIENT_ID=your_spotify_client_id
    ```
 
 4. **Run the application**
+
    ```bash
    npm start
    # or for development
@@ -76,18 +81,18 @@ bot-twich/
 
 ### For Users
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `!task <tasks>` | Add new tasks (max. 5 per user) | `!task study, exercise` |
-| `!mytasks` / `!list` | View pending tasks | `!mytasks` |
-| `!done <numbers>` | Mark tasks as completed | `!done 1, 2, 3` |
-| `!cleardone` | Clear completed tasks | `!cleardone` |
-| `!hello` | Bot greeting | `!hello` |
+| Command              | Description                     | Example                 |
+| -------------------- | ------------------------------- | ----------------------- |
+| `!task <tasks>`      | Add new tasks (max. 5 per user) | `!task study, exercise` |
+| `!mytasks` / `!list` | View pending tasks              | `!mytasks`              |
+| `!done <numbers>`    | Mark tasks as completed         | `!done 1, 2, 3`         |
+| `!cleardone`         | Clear completed tasks           | `!cleardone`            |
+| `!hello`             | Bot greeting                    | `!hello`                |
 
 ### For Streamer
 
-| Command | Description | Example |
-|---------|-------------|---------|
+| Command   | Description                    | Example   |
+| --------- | ------------------------------ | --------- |
 | `!delete` | Delete all tasks for all users | `!delete` |
 
 ## System Rules
@@ -140,6 +145,7 @@ npm run lint
 ## Debugging
 
 Logs are displayed in console with timestamps and levels:
+
 - `INFO`: Normal operations
 - `ERROR`: Captured errors
 - `WARN`: Warnings
