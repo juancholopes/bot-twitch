@@ -67,6 +67,7 @@ bot-twich/
    TWITCH_USERNAME=your_bot_username
    CHANEL_NAME=your_channel_name
    SPOTYFY_CLIENT_ID=your_spotify_client_id
+   SPOTYFY_CLIENT_SECRET=your_spotify_client_secret
    ```
 
 4. **Run the application**
