@@ -152,4 +152,7 @@ Logs are displayed in console with timestamps and levels:
 - `WARN`: Warnings
 - `DEBUG`: Development information
 
-`GET /health` - Server health check
+## Web Endpoints
+
+- `GET /` - General bot status
+- `GET /health` - Server health check
