@@ -100,4 +100,6 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-
+#IDE folders 
+.idea/
+.vscode/
