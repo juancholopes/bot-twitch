@@ -2,27 +2,24 @@
   {
     "user": "juancholops",
     "task": [
-      "ADD SERVER TO OVERLAY",
-      "ADD DIFFERENT OVERLAY TO SPORITY",
-      "FIRST PERSON",
-      "PPT - APLY CHAINS",
-      "CRUSS ALL RODERS",
-      "MAKE A VIDEO",
-      "MAKE A VIDEO",
-      "MAKE A VIDEO",
-      "MAKE A VIDEO",
-      "MAKE A VIDEO"
+      "TERMINAR IMPLEMENTACIÓN DEL BOT DE TWITCH"
     ],
-    "completed": []
+    "completed": [
+      "MAKE A VIDEO",
+      "TERMINAR IMPLEMENTACIÓN DE BASE DE DATOS",
+      "MAKE A VIDEO"
+    ]
   },
   {
     "user": "codermax",
     "task": [
       "Implement user authentication",
-
       "Write unit tests for login module"
     ],
-    "completed": ["Refactor API endpoints", "Update dependencies"]
+    "completed": [
+      "Refactor API endpoints",
+      "Update dependencies"
+    ]
   },
   {
     "user": "devsara",

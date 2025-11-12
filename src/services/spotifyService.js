@@ -1,9 +1,23 @@
-const SpotifyWebApi = require("spotify-web-api-node");
+const config = require("../config/environment");
 
-const spotifyApi = new spotifyApi({
-  clientId: process.env.SPOTIFY_CLIENT_ID,
-  clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process.env.SPOTIFY_REDIRECT_URI,
-});
+// Function to get access token for header authorization
+export async function getAccessToken() {
+  const response = await fetch("https://accounts.spotify.com/api/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: config.spotify.clientId,
+      client_secret: config.spotify.clientSecret,
+    }),
+  });
 
-spotifyApi.setAccessToken(process.env.SPOTIFY_ACCESS_TOKEN);
+  if (!response.ok) {
+    throw new Error("Failed to fetch access token");
+  }
+
+  const data = await response.json();
+  return data;
+}
