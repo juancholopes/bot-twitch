@@ -9,6 +9,17 @@ export async function getAccessToken() {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+    }),
   });
-}
 
+  if (!response.ok) {
+    throw new Error("Failed to fetch access token");
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}

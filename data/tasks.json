@@ -19,10 +19,10 @@
     "user": "codermax",
     "task": [
       "Implement user authentication",
-      
+
       "Write unit tests for login module"
     ],
-    "completed": ["Refactor API endpoints", "Update dependencies" ]
+    "completed": ["Refactor API endpoints", "Update dependencies"]
   },
   {
     "user": "devsara",
