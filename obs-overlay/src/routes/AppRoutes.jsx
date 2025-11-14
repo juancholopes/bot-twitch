@@ -1,9 +1,10 @@
-import { Route, Routes } from "react-router";
+import { Route, Routes } from "react-router-dom";
+import App from "../App";
 
-export const AppRoutes = () => {
+export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={}/>
+      <Route path="/" element={<App />} />
     </Routes>
   );
-};
+}
