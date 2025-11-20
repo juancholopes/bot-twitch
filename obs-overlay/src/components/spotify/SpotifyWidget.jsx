@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react";
 
-const SpotifyWidget = () => {};
+const SpotifyWidget = () => {
+
+
+    
+};
 
 export default SpotifyWidget;
