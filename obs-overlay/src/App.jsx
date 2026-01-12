@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import React from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import CompactTaskList from './components/CompactTaskList';
+import SpotifyWidget from './components/spotify/SpotifyWidget';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -198,6 +199,7 @@ function App() {
           loading={loading}
           connected={connected}
         />
+        <SpotifyWidget />
       </Container>
     </>
   );

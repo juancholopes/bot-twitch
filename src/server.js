@@ -5,6 +5,7 @@ const path = require("path");
 const config = require("./config/environment");
 const logger = require("./utils/logger");
 const taskService = require("./services/taskService");
+const spotifyRoutes = require("./routes/spotify.routes");
 
 class WebServer {
 	constructor() {
@@ -29,6 +30,9 @@ class WebServer {
 				next();
 			}
 		});
+
+		// Spotify Routes
+		this.app.use('/', spotifyRoutes);
 
 		this.app.get("/", (_req, res) => {
 			res.json({
