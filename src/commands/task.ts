@@ -11,6 +11,8 @@ export const handleAddTask = async (
 	taskInput: string,
 ): Promise<void> => {
 	try {
+		if (!tags.username) return;
+		
 		const validTasks = taskInput
 			.split(',')
 			.map((task) => Validators.sanitizeTask(task))
@@ -28,7 +30,7 @@ export const handleAddTask = async (
 		const taskList = validTasks.map((task) => task.toUpperCase());
 
 		const currentTaskCount = await taskService.getUserTaskCount(
-			tags.username!,
+			tags.username,
 		);
 		const availableSlots = config.tasks.maxTasksPerUser - currentTaskCount;
 
@@ -43,7 +45,7 @@ export const handleAddTask = async (
 		const tasksToAdd = taskList.slice(0, availableSlots);
 		const tasksRejected = taskList.length - tasksToAdd.length;
 
-		const success = await taskService.addTasks(tags.username!, tasksToAdd);
+		const success = await taskService.addTasks(tags.username, tasksToAdd);
 
 		if (!success) {
 			await client.say(
