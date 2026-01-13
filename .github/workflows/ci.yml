@@ -9,9 +9,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     
     permissions:
       contents: read
+=======
+>>>>>>> 7fb093a (Configure CI/CD with GitHub Actions workflow)
 
     strategy:
       matrix:
