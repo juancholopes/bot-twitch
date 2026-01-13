@@ -5,7 +5,7 @@ import logger from '../utils/logger';
 const router = express.Router();
 
 // Login route
-router.get('/api/spotify/login', (req: Request, res: Response) => {
+router.get('/api/spotify/login', (_req: Request, res: Response) => {
 	const authUrl = spotifyService.getAuthorizationUrl();
 	res.redirect(authUrl);
 });
@@ -41,7 +41,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 });
 
 // Player state route
-router.get('/api/spotify/player', async (req: Request, res: Response) => {
+router.get('/api/spotify/player', async (_req: Request, res: Response) => {
 	try {
 		const playerState = await spotifyService.getPlayerState();
 		res.json(playerState || { is_playing: false });
