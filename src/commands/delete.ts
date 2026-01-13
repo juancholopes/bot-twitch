@@ -9,11 +9,9 @@ export const handleDeleteAll = async (
 	tags: ChatUserstate,
 ): Promise<void> => {
 	try {
-		if (!tags.username) return;
-		
 		// Verificar si es el streamer
 		if (
-			tags.username.toLowerCase() !==
+			tags.username!.toLowerCase() !==
 			config.twitch.username.toLowerCase()
 		) {
 			await client.say(

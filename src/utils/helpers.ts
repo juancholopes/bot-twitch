@@ -1,7 +1,7 @@
 export const parseTaskNumbers = (input: string): number[] => {
 	return input
 		.split(',')
-		.map((num) => parseInt(num.trim(), 10))
+		.map((num) => parseInt(num.trim()))
 		.filter((num) => !Number.isNaN(num) && num > 0);
 };
 
