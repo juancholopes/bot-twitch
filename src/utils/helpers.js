@@ -1,6 +1,6 @@
 const parseTaskNumbers = (input) => {
 	return input
-		.split(",")
+		.split(',')
 		.map((num) => parseInt(num.trim()))
 		.filter((num) => !Number.isNaN(num) && num > 0);
 };
@@ -12,11 +12,11 @@ const validateTaskNumbers = (numbers, maxTasks) => {
 const formatTaskList = (tasks) => {
 	return tasks
 		.map((task, index) => `${index + 1}. ${task.toLowerCase()}`)
-		.join(", ");
+		.join(', ');
 };
 
 const formatCompletedTasks = (tasks) => {
-	return tasks.map((task) => task.toLowerCase()).join(", ");
+	return tasks.map((task) => task.toLowerCase()).join(', ');
 };
 
 module.exports = {

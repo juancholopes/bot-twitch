@@ -1,8 +1,8 @@
-const fs = require("fs").promises;
-const fsSync = require("fs");
-const path = require("path");
-const config = require("../config/environment");
-const logger = require("../utils/logger");
+const fs = require('fs').promises;
+const fsSync = require('fs');
+const path = require('path');
+const config = require('../config/environment');
+const logger = require('../utils/logger');
 
 class TaskService {
 	constructor() {
@@ -28,10 +28,10 @@ class TaskService {
 
 	async readTasks() {
 		try {
-			const data = await fs.readFile(this.dataFile, "utf8");
+			const data = await fs.readFile(this.dataFile, 'utf8');
 			return JSON.parse(data);
 		} catch (error) {
-			logger.error("Error reading tasks file:", error);
+			logger.error('Error reading tasks file:', error);
 			return [];
 		}
 	}
@@ -47,13 +47,15 @@ class TaskService {
 				}
 				return true;
 			} catch (error) {
-				logger.error("Error writing tasks file:", error);
-				try { await fs.unlink(tempFile); } catch (e) { }
+				logger.error('Error writing tasks file:', error);
+				try {
+					await fs.unlink(tempFile);
+				} catch (e) {}
 				return false;
 			}
 		});
 
-		this.writeQueue = writeOp.catch(() => { });
+		this.writeQueue = writeOp.catch(() => {});
 		return writeOp;
 	}
 
@@ -93,7 +95,7 @@ class TaskService {
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		if (!user.completed) user.completed = [];
@@ -119,7 +121,7 @@ class TaskService {
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		const clearedCount = user.completed ? user.completed.length : 0;

@@ -1,8 +1,12 @@
+import type { ChatUserstate, Client } from 'tmi.js';
 import taskService from '../services/taskService';
 import logger from '../utils/logger';
-import type { Client, ChatUserstate } from 'tmi.js';
 
-export const handleClearDone = async (client: Client, channel: string, tags: ChatUserstate): Promise<void> => {
+export const handleClearDone = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+): Promise<void> => {
 	try {
 		const result = await taskService.clearCompletedTasks(tags.username!);
 
@@ -30,7 +34,7 @@ export const handleClearDone = async (client: Client, channel: string, tags: Cha
 			`Usuario ${tags.username} limpió ${result.clearedCount} tareas completadas`,
 		);
 	} catch (error) {
-		logger.error("Error en comando cleardone:", error);
+		logger.error('Error en comando cleardone:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al limpiar las tareas completadas.`,

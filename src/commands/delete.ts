@@ -1,12 +1,19 @@
-import taskService from '../services/taskService';
+import type { ChatUserstate, Client } from 'tmi.js';
 import config from '../config/environment';
+import taskService from '../services/taskService';
 import logger from '../utils/logger';
-import type { Client, ChatUserstate } from 'tmi.js';
 
-export const handleDeleteAll = async (client: Client, channel: string, tags: ChatUserstate): Promise<void> => {
+export const handleDeleteAll = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+): Promise<void> => {
 	try {
 		// Verificar si es el streamer
-		if (tags.username!.toLowerCase() !== config.twitch.username.toLowerCase()) {
+		if (
+			tags.username!.toLowerCase() !==
+			config.twitch.username.toLowerCase()
+		) {
 			await client.say(
 				channel,
 				`@${tags.username}, no tienes permisos para ejecutar este comando.`,
@@ -30,7 +37,7 @@ export const handleDeleteAll = async (client: Client, channel: string, tags: Cha
 		);
 		logger.info(`${tags.username} eliminó todas las tareas del sistema.`);
 	} catch (error) {
-		logger.error("Error en comando delete:", error);
+		logger.error('Error en comando delete:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al eliminar las tareas.`,

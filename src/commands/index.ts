@@ -1,13 +1,18 @@
-import { handleMyTasks } from "./mytasks";
-import { handleAddTask, handleTaskHelp } from "./task";
-import { handleDoneTask } from "./done";
-import { handleClearDone } from "./cleardone";
-import { handleDeleteAll } from "./delete";
-import { handleHello } from "./hello";
-import { handleHelp } from "./help";
-import type { Client, ChatUserstate } from 'tmi.js';
+import type { ChatUserstate, Client } from 'tmi.js';
+import { handleClearDone } from './cleardone';
+import { handleDeleteAll } from './delete';
+import { handleDoneTask } from './done';
+import { handleHello } from './hello';
+import { handleHelp } from './help';
+import { handleMyTasks } from './mytasks';
+import { handleAddTask, handleTaskHelp } from './task';
 
-type CommandHandler = (client: Client, channel: string, tags: ChatUserstate, ...args: any[]) => Promise<void>;
+type CommandHandler = (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+	...args: any[]
+) => Promise<void>;
 
 interface CommandHandlers {
 	[key: string]: CommandHandler;

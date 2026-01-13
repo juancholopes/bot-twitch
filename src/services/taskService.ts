@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
 import * as fsSync from 'fs';
+import { promises as fs } from 'fs';
 import * as path from 'path';
 import config from '../config/environment';
 import logger from '../utils/logger';
@@ -39,10 +39,10 @@ class TaskService {
 
 	async readTasks(): Promise<UserTask[]> {
 		try {
-			const data = await fs.readFile(this.dataFile, "utf8");
+			const data = await fs.readFile(this.dataFile, 'utf8');
 			return JSON.parse(data);
 		} catch (error) {
-			logger.error("Error reading tasks file:", error);
+			logger.error('Error reading tasks file:', error);
 			return [];
 		}
 	}
@@ -58,8 +58,10 @@ class TaskService {
 				}
 				return true;
 			} catch (error) {
-				logger.error("Error writing tasks file:", error);
-				try { await fs.unlink(tempFile); } catch (e) { }
+				logger.error('Error writing tasks file:', error);
+				try {
+					await fs.unlink(tempFile);
+				} catch (e) {}
 				return false;
 			}
 		});
@@ -99,12 +101,19 @@ class TaskService {
 		return await this.writeTasks(users);
 	}
 
-	async completeTasks(username: string, taskNumbers: number[]): Promise<{ success: boolean; message?: string; completedTasks?: string[] }> {
+	async completeTasks(
+		username: string,
+		taskNumbers: number[],
+	): Promise<{
+		success: boolean;
+		message?: string;
+		completedTasks?: string[];
+	}> {
 		const users = await this.readTasks();
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		if (!user.completed) user.completed = [];
@@ -125,12 +134,14 @@ class TaskService {
 		return { success, completedTasks };
 	}
 
-	async clearCompletedTasks(username: string): Promise<{ success: boolean; message?: string; clearedCount?: number }> {
+	async clearCompletedTasks(
+		username: string,
+	): Promise<{ success: boolean; message?: string; clearedCount?: number }> {
 		const users = await this.readTasks();
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		const clearedCount = user.completed ? user.completed.length : 0;

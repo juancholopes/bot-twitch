@@ -1,13 +1,17 @@
-import express, { Request, Response, Application } from 'express';
 import cors from 'cors';
-import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import path from 'path';
+import express, {
+	type Application,
+	type Request,
+	type Response,
+} from 'express';
 import { promises as fs } from 'fs';
+import http from 'http';
+import path from 'path';
+import { Server as SocketIOServer } from 'socket.io';
 import config from './config/environment';
-import logger from './utils/logger';
-import taskService from './services/taskService';
 import spotifyRoutes from './routes/spotify.routes';
+import taskService from './services/taskService';
+import logger from './utils/logger';
 
 class WebServer {
 	private app: Application;
@@ -27,31 +31,31 @@ class WebServer {
 
 	private setupRoutes(): void {
 		const allowedOrigins = config.cors.allowedOrigins
-			? config.cors.allowedOrigins.split(",")
+			? config.cors.allowedOrigins.split(',')
 			: [];
 
 		this.app.use(
 			cors({
-				origin: function (origin, callback) {
+				origin: (origin, callback) => {
 					if (!origin) return callback(null, true);
 
-					if (config.env === "development") {
+					if (config.env === 'development') {
 						return callback(null, true);
 					}
 
 					if (allowedOrigins.indexOf(origin) !== -1) {
 						callback(null, true);
 					} else {
-						callback(new Error("Not allowed by CORS"));
+						callback(new Error('Not allowed by CORS'));
 					}
 				},
-				methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+				methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 				allowedHeaders: [
-					"Origin",
-					"X-Requested-With",
-					"Content-Type",
-					"Accept",
-					"Authorization",
+					'Origin',
+					'X-Requested-With',
+					'Content-Type',
+					'Accept',
+					'Authorization',
 				],
 				credentials: true,
 			}),
@@ -60,34 +64,37 @@ class WebServer {
 		// Spotify Routes
 		this.app.use('/', spotifyRoutes);
 
-		this.app.get("/", (_req: Request, res: Response) => {
+		this.app.get('/', (_req: Request, res: Response) => {
 			res.json({
-				message: "Bot de Twitch funcionando correctamente",
+				message: 'Bot de Twitch funcionando correctamente',
 				timestamp: new Date().toISOString(),
-				status: "online",
+				status: 'online',
 			});
 		});
 
-		this.app.get("/health", (_req: Request, res: Response) => {
+		this.app.get('/health', (_req: Request, res: Response) => {
 			res.json({
-				status: "healthy",
+				status: 'healthy',
 				uptime: process.uptime(),
 				timestamp: new Date().toISOString(),
 			});
 		});
 
-		this.app.get("/api/tasks", async (_req: Request, res: Response) => {
-			const tasksPath = path.join(__dirname, "../data/tasks.json");
+		this.app.get('/api/tasks', async (_req: Request, res: Response) => {
+			const tasksPath = path.join(__dirname, '../data/tasks.json');
 			try {
-				const data = await fs.readFile(tasksPath, "utf8");
+				const data = await fs.readFile(tasksPath, 'utf8');
 				res.json(JSON.parse(data));
 			} catch (err) {
-				res.status(500).json({ error: "Failed to read tasks data" });
+				res.status(500).json({ error: 'Failed to read tasks data' });
 			}
 		});
 
 		// Serve overlay static files
-		this.app.use("/overlay", express.static(path.join(__dirname, "../obs-overlay/dist")));
+		this.app.use(
+			'/overlay',
+			express.static(path.join(__dirname, '../obs-overlay/dist')),
+		);
 	}
 
 	private setupSocket(): void {
@@ -103,11 +110,13 @@ class WebServer {
 		return new Promise((resolve, reject) => {
 			try {
 				this.server.listen(this.port, () => {
-					logger.info(`Servidor web iniciado en http://localhost:${this.port}`);
+					logger.info(
+						`Servidor web iniciado en http://localhost:${this.port}`,
+					);
 					resolve();
 				});
 			} catch (error) {
-				logger.error("Error iniciando servidor web:", error);
+				logger.error('Error iniciando servidor web:', error);
 				reject(error);
 			}
 		});
@@ -117,7 +126,7 @@ class WebServer {
 		return new Promise((resolve) => {
 			if (this.server) {
 				this.server.close(() => {
-					logger.info("Servidor web detenido");
+					logger.info('Servidor web detenido');
 					resolve();
 				});
 			} else {

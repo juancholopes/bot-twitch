@@ -1,10 +1,10 @@
-const taskService = require("../services/taskService");
-const logger = require("../utils/logger");
+const taskService = require('../services/taskService');
+const logger = require('../utils/logger');
 const {
 	parseTaskNumbers,
 	validateTaskNumbers,
 	formatCompletedTasks,
-} = require("../utils/helpers");
+} = require('../utils/helpers');
 
 const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 	try {
@@ -43,12 +43,15 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 		if (invalidNumbers.length > 0) {
 			await client.say(
 				channel,
-				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(", ")}. Tienes ${user.task.length} tarea(s).`,
+				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(', ')}. Tienes ${user.task.length} tarea(s).`,
 			);
 			return;
 		}
 
-		const result = await taskService.completeTasks(tags.username, validNumbers);
+		const result = await taskService.completeTasks(
+			tags.username,
+			validNumbers,
+		);
 
 		if (!result.success) {
 			await client.say(
@@ -69,7 +72,7 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 			result.completedTasks,
 		);
 	} catch (error) {
-		logger.error("Error en comando done:", error);
+		logger.error('Error en comando done:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al procesar las tareas completadas.`,
