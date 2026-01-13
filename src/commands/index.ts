@@ -7,6 +7,7 @@ import { handleHelp } from './help';
 import { handleMyTasks } from './mytasks';
 import { handleAddTask, handleTaskHelp } from './task';
 
+// biome-ignore lint/suspicious/noExplicitAny: Command handlers need flexible arguments
 type CommandHandler = (
 	client: Client,
 	channel: string,

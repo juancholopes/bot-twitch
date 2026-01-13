@@ -9,7 +9,9 @@ export const handleMyTasks = async (
 	tags: ChatUserstate,
 ): Promise<void> => {
 	try {
-		const user = await taskService.findUser(tags.username!);
+		if (!tags.username) return;
+		
+		const user = await taskService.findUser(tags.username);
 
 		if (user && user.task.length > 0) {
 			const taskList = formatTaskList(user.task);

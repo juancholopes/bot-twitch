@@ -14,6 +14,8 @@ export const handleDoneTask = async (
 	taskNumbersInput: string,
 ): Promise<void> => {
 	try {
+		if (!tags.username) return;
+		
 		if (!taskNumbersInput) {
 			await client.say(
 				channel,
@@ -32,7 +34,7 @@ export const handleDoneTask = async (
 			return;
 		}
 
-		const user = await taskService.findUser(tags.username!);
+		const user = await taskService.findUser(tags.username);
 		if (!user) {
 			await client.say(
 				channel,
@@ -55,7 +57,7 @@ export const handleDoneTask = async (
 		}
 
 		const result = await taskService.completeTasks(
-			tags.username!,
+			tags.username,
 			validNumbers,
 		);
 
@@ -67,14 +69,14 @@ export const handleDoneTask = async (
 			return;
 		}
 
-		const taskList = formatCompletedTasks(result.completedTasks!);
+		const taskList = formatCompletedTasks(result.completedTasks || []);
 		await client.say(
 			channel,
 			`@${tags.username}, marcaste como completada(s): ${taskList}. ¡Felicidades!`,
 		);
 
 		logger.info(
-			`Usuario ${tags.username} completó ${result.completedTasks!.length} tareas`,
+			`Usuario ${tags.username} completó ${result.completedTasks?.length || 0} tareas`,
 			result.completedTasks,
 		);
 	} catch (error) {

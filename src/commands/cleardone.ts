@@ -8,7 +8,9 @@ export const handleClearDone = async (
 	tags: ChatUserstate,
 ): Promise<void> => {
 	try {
-		const result = await taskService.clearCompletedTasks(tags.username!);
+		if (!tags.username) return;
+		
+		const result = await taskService.clearCompletedTasks(tags.username);
 
 		if (!result.success) {
 			await client.say(

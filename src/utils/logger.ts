@@ -1,27 +1,27 @@
 interface Logger {
-	info: (message: string, data?: any) => void;
-	error: (message: string, error?: any) => void;
-	warn: (message: string, data?: any) => void;
-	debug: (message: string, data?: any) => void;
+	info: (message: string, data?: unknown) => void;
+	error: (message: string, error?: unknown) => void;
+	warn: (message: string, data?: unknown) => void;
+	debug: (message: string, data?: unknown) => void;
 }
 
 const logger: Logger = {
-	info: (message: string, data: any = null) => {
+	info: (message: string, data: unknown = null) => {
 		const timestamp = new Date().toISOString();
 		console.log(`[${timestamp}] INFO: ${message}`, data ? data : '');
 	},
 
-	error: (message: string, error: any = null) => {
+	error: (message: string, error: unknown = null) => {
 		const timestamp = new Date().toISOString();
 		console.error(`[${timestamp}] ERROR: ${message}`, error ? error : '');
 	},
 
-	warn: (message: string, data: any = null) => {
+	warn: (message: string, data: unknown = null) => {
 		const timestamp = new Date().toISOString();
 		console.warn(`[${timestamp}] WARN: ${message}`, data ? data : '');
 	},
 
-	debug: (message: string, data: any = null) => {
+	debug: (message: string, data: unknown = null) => {
 		const timestamp = new Date().toISOString();
 		console.log(`[${timestamp}] DEBUG: ${message}`, data ? data : '');
 	},
