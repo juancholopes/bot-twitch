@@ -1,0 +1,35 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "commonjs",
+		"lib": ["ES2020"],
+		"outDir": "./dist",
+		"rootDir": "./",
+		"removeComments": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"moduleResolution": "node",
+		"types": ["node", "jest"],
+		"allowSyntheticDefaultImports": true
+	},
+	"include": [
+		"src/**/*.ts",
+		"app.ts",
+		"get-spotify-token.ts",
+		"set-spotify-token.ts",
+		"test-spotify.ts",
+		"test-player-endpoint.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"obs-overlay",
+		"data"
+	]
+}
