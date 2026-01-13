@@ -1,119 +1,180 @@
 const axios = require('axios');
 const querystring = require('querystring');
+const config = require('../config/environment');
 const logger = require('../utils/logger');
-require('dotenv').config();
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || 'http://127.0.0.1:3000/callback';
+class SpotifyService {
+    constructor() {
+        // Safe check for config properties
+        const spotifyConfig = config.spotify || {};
+        
+        this.clientId = spotifyConfig.clientId;
+        this.clientSecret = spotifyConfig.clientSecret;
+        this.redirectUri = spotifyConfig.redirectUri;
+        this.refreshToken = spotifyConfig.refreshToken;
+        this.enabled = spotifyConfig.enabled;
 
-if (!CLIENT_ID || !CLIENT_SECRET) {
-    logger.error('ERROR: SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET are missing in .env file.');
+        this.accessToken = null;
+        this.tokenExpiration = 0;
+
+        if (!this.isEnabled()) {
+            logger.warn('Spotify service disabled or configuration missing.');
+        }
+    }
+
+    isEnabled() {
+        return this.enabled && this.clientId && this.clientSecret;
+    }
+
+    getAuthorizationUrl() {
+        const scope = 'user-read-currently-playing user-read-playback-state';
+        return 'https://accounts.spotify.com/authorize?' +
+            querystring.stringify({
+                response_type: 'code',
+                client_id: this.clientId,
+                scope: scope,
+                redirect_uri: this.redirectUri,
+            });
+    }
+
+    async getTokensFromCode(code) {
+        const authOptions = {
+            url: 'https://accounts.spotify.com/api/token',
+            method: 'post',
+            data: querystring.stringify({
+                code: code,
+                redirect_uri: this.redirectUri,
+                grant_type: 'authorization_code'
+            }),
+            headers: {
+                'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+        };
+
+        try {
+            const response = await axios(authOptions);
+            this.accessToken = response.data.access_token;
+            this.tokenExpiration = Date.now() + (response.data.expires_in * 1000);
+            
+            // Log refresh token for user to save
+            if (response.data.refresh_token) {
+                this.refreshToken = response.data.refresh_token; // Update in memory
+            }
+            
+            return response.data;
+        } catch (error) {
+            logger.error('Error getting tokens from code:', error.response ? error.response.data : error.message);
+            throw error;
+        }
+    }
+
+    async refreshAccessToken() {
+        if (!this.refreshToken) {
+            // logger.error('No refresh token available for Spotify');
+            // Throwing here might crash the loop if not handled, but caller expects token.
+            throw new Error('No refresh token available');
+        }
+
+        const authOptions = {
+            url: 'https://accounts.spotify.com/api/token',
+            method: 'post',
+            data: querystring.stringify({
+                grant_type: 'refresh_token',
+                refresh_token: this.refreshToken
+            }),
+            headers: {
+                'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+        };
+
+        try {
+            const response = await axios(authOptions);
+            this.accessToken = response.data.access_token;
+            this.tokenExpiration = Date.now() + (response.data.expires_in * 1000);
+            
+            if (response.data.refresh_token) {
+                 this.refreshToken = response.data.refresh_token; 
+                 logger.info('New Spotify refresh token received.');
+            }
+            
+            return this.accessToken;
+        } catch (error) {
+            const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+            logger.error(`Error refreshing Spotify access token: ${errorMsg}`);
+            throw error;
+        }
+    }
+
+    async getAccessToken() {
+        // Refresh 60 seconds before expiration
+        if (this.accessToken && Date.now() < this.tokenExpiration - 60000) {
+            return this.accessToken;
+        }
+        return await this.refreshAccessToken();
+    }
+
+    async getPlayerState() {
+        if (!this.isEnabled()) return null;
+
+        try {
+            return await this._requestWithRetry(async () => {
+                const token = await this.getAccessToken();
+                const response = await axios.get('https://api.spotify.com/v1/me/player', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.status === 204) {
+                    return null;
+                }
+                return response.data;
+            });
+        } catch (error) {
+            // Only log errors that are not just "not playing" or temporary issues
+            // But we already handle 204.
+            // logger.error('Error fetching player state:', error.message);
+            return null; // Return null on failure to keep bot valid
+        }
+    }
+
+    async _requestWithRetry(requestFn, retries = 3) {
+        let lastError;
+        
+        for (let i = 0; i < retries; i++) {
+            try {
+                return await requestFn();
+            } catch (error) {
+                lastError = error;
+                
+                // If unauthorized, token might be stale despite our checks
+                if (error.response && error.response.status === 401) {
+                    logger.warn('Spotify 401. Invalidating token...');
+                    this.accessToken = null;
+                    this.tokenExpiration = 0;
+                    // Next iteration will call getAccessToken() which will refresh
+                    continue; 
+                }
+
+                if (error.response && error.response.status === 429) {
+                    const retryAfter = (parseInt(error.response.headers['retry-after']) || 5) * 1000;
+                    logger.warn(`Spotify Rate Limit. Waiting ${retryAfter/1000}s`);
+                    await new Promise(r => setTimeout(r, retryAfter));
+                    continue;
+                }
+                
+                if (error.response && error.response.status >= 500) {
+                     const delay = 1000 * Math.pow(2, i);
+                     await new Promise(r => setTimeout(r, delay));
+                     continue;
+                }
+
+                // If it's another error, don't retry
+                throw error; 
+            }
+        }
+        throw lastError;
+    }
 }
 
-let accessToken = null;
-let tokenExpiration = 0;
-
-const getAuthorizationUrl = () => {
-    const scope = 'user-read-currently-playing user-read-playback-state';
-    return 'https://accounts.spotify.com/authorize?' +
-        querystring.stringify({
-            response_type: 'code',
-            client_id: CLIENT_ID,
-            scope: scope,
-            redirect_uri: REDIRECT_URI,
-        });
-};
-
-const getTokensFromCode = async (code) => {
-    const authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        method: 'post',
-        data: querystring.stringify({
-            code: code,
-            redirect_uri: REDIRECT_URI,
-            grant_type: 'authorization_code'
-        }),
-        headers: {
-            'Authorization': 'Basic ' + (Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-    };
-
-    try {
-        const response = await axios(authOptions);
-        accessToken = response.data.access_token;
-        const refreshToken = response.data.refresh_token;
-        tokenExpiration = Date.now() + (response.data.expires_in * 1000);
-        return { accessToken, refreshToken };
-    } catch (error) {
-        logger.error('Error getting tokens from code:', error.response ? error.response.data : error.message);
-        throw error;
-    }
-};
-
-const refreshAccessToken = async () => {
-    const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
-    if (!refreshToken) {
-        throw new Error('No refresh token available');
-    }
-
-    const authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        method: 'post',
-        data: querystring.stringify({
-            grant_type: 'refresh_token',
-            refresh_token: refreshToken
-        }),
-        headers: {
-            'Authorization': 'Basic ' + (Buffer.from(CLIENT_ID + ':' + CLIENT_SECRET).toString('base64')),
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-    };
-
-    try {
-        const response = await axios(authOptions);
-        accessToken = response.data.access_token;
-        if (response.data.refresh_token) {
-             logger.info('New refresh token received (update your .env if persistent): ' + response.data.refresh_token);
-        }
-        tokenExpiration = Date.now() + (response.data.expires_in * 1000);
-        return accessToken;
-    } catch (error) {
-         logger.error('Error refreshing access token:', error.response ? error.response.data : error.message);
-         throw error;
-    }
-};
-
-const getAccessToken = async () => {
-    if (accessToken && Date.now() < tokenExpiration) {
-        return accessToken;
-    }
-    return await refreshAccessToken();
-};
-
-const getPlayerState = async () => {
-    try {
-        const token = await getAccessToken();
-        const response = await axios.get('https://api.spotify.com/v1/me/player', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        
-        if (response.status === 204 || !response.data) {
-            return null;
-        }
-
-        return response.data;
-    } catch (error) {
-        logger.error('Error getting player state - ' + (error.response ? error.response.status : error.message));
-        return null;
-    }
-};
-
-module.exports = {
-    getAuthorizationUrl,
-    getTokensFromCode,
-    refreshAccessToken,
-    getAccessToken,
-    getPlayerState
-};
+module.exports = new SpotifyService();

@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 const path = require("path");
@@ -19,17 +20,36 @@ class WebServer {
 	}
 
 	setupRoutes() {
-		// Enable CORS for all routes
-		this.app.use((req, res, next) => {
-			res.header('Access-Control-Allow-Origin', '*');
-			res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-			res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-			if (req.method === 'OPTIONS') {
-				res.sendStatus(200);
-			} else {
-				next();
-			}
-		});
+		const allowedOrigins = config.cors.allowedOrigins
+			? config.cors.allowedOrigins.split(",")
+			: [];
+
+		this.app.use(
+			cors({
+				origin: function (origin, callback) {
+					if (!origin) return callback(null, true);
+
+					if (config.env === "development") {
+						return callback(null, true);
+					}
+
+					if (allowedOrigins.indexOf(origin) !== -1) {
+						callback(null, true);
+					} else {
+						callback(new Error("Not allowed by CORS"));
+					}
+				},
+				methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+				allowedHeaders: [
+					"Origin",
+					"X-Requested-With",
+					"Content-Type",
+					"Accept",
+					"Authorization",
+				],
+				credentials: true,
+			}),
+		);
 
 		// Spotify Routes
 		this.app.use('/', spotifyRoutes);

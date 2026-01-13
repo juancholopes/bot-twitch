@@ -1,6 +1,7 @@
 const tmi = require("tmi.js");
 const config = require("./config/environment");
 const logger = require("./utils/logger");
+const { limiters } = require("./utils/rateLimiter");
 
 class TwitchBot {
 	constructor() {
@@ -28,6 +29,17 @@ class TwitchBot {
 		if (self) return;
 
 		const msg = message.trim();
+
+		// Ignorar mensajes que no inician con !
+		if (!msg.startsWith("!")) return;
+
+		// Rate Limiting
+		if (!limiters.default.checkLimit(tags.username)) {
+			// Silenciosamente ignorar o loguear
+			logger.warn(`Rate limit exceeded for user: ${tags.username}`);
+			return;
+		}
+
 		const commandHandlers = require("./commands");
 
 		try {

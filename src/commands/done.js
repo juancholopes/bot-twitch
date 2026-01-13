@@ -26,7 +26,7 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 			return;
 		}
 
-		const user = taskService.findUser(tags.username);
+		const user = await taskService.findUser(tags.username);
 		if (!user) {
 			await client.say(
 				channel,
@@ -48,7 +48,7 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 			return;
 		}
 
-		const result = taskService.completeTasks(tags.username, validNumbers);
+		const result = await taskService.completeTasks(tags.username, validNumbers);
 
 		if (!result.success) {
 			await client.say(

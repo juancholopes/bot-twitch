@@ -13,7 +13,7 @@ const handleDeleteAll = async (client, channel, tags) => {
 			return;
 		}
 
-		const success = taskService.deleteAllTasks();
+		const success = await taskService.deleteAllTasks();
 
 		if (!success) {
 			await client.say(

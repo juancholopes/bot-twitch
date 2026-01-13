@@ -3,7 +3,7 @@ const logger = require("../utils/logger");
 
 const handleClearDone = async (client, channel, tags) => {
 	try {
-		const result = taskService.clearCompletedTasks(tags.username);
+		const result = await taskService.clearCompletedTasks(tags.username);
 
 		if (!result.success) {
 			await client.say(

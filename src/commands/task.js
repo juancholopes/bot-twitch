@@ -1,15 +1,16 @@
 const taskService = require("../services/taskService");
 const config = require("../config/environment");
 const logger = require("../utils/logger");
+const Validators = require("../utils/validators");
 
 const handleAddTask = async (client, channel, tags, taskInput) => {
 	try {
-		const taskArray = taskInput
+		const validTasks = taskInput
 			.split(",")
-			.map((task) => task.trim())
+			.map((task) => Validators.sanitizeTask(task))
 			.filter((task) => task.length > 0);
 
-		if (taskArray.length > config.tasks.maxTasksPerCommand) {
+		if (validTasks.length > config.tasks.maxTasksPerCommand) {
 			await client.say(
 				channel,
 				`@${tags.username}, solo puedes agregar un máximo de ${config.tasks.maxTasksPerCommand} tareas a la vez.`,
@@ -17,13 +18,10 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 			return;
 		}
 
-		const taskList = taskInput
-			.toUpperCase()
-			.split(",")
-			.map((task) => task.trim())
-			.filter((task) => task.length > 0);
+		// Normalize to uppercase for storage
+		const taskList = validTasks.map(task => task.toUpperCase());
 
-		const currentTaskCount = taskService.getUserTaskCount(tags.username);
+		const currentTaskCount = await taskService.getUserTaskCount(tags.username);
 		const availableSlots = config.tasks.maxTasksPerUser - currentTaskCount;
 
 		if (availableSlots <= 0) {
@@ -37,7 +35,7 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 		const tasksToAdd = taskList.slice(0, availableSlots);
 		const tasksRejected = taskList.length - tasksToAdd.length;
 
-		const success = taskService.addTasks(tags.username, tasksToAdd);
+		const success = await taskService.addTasks(tags.username, tasksToAdd);
 
 		if (!success) {
 			await client.say(

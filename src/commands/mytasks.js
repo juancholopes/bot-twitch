@@ -4,7 +4,7 @@ const { formatTaskList } = require("../utils/helpers");
 
 const handleMyTasks = async (client, channel, tags) => {
 	try {
-		const user = taskService.findUser(tags.username);
+		const user = await taskService.findUser(tags.username);
 
 		if (user && user.task.length > 0) {
 			const taskList = formatTaskList(user.task);
