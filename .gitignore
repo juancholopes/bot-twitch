@@ -12,6 +12,7 @@
 # Dependencies
 node_modules/
 pnpm-debug.log*
+package-lock.json
 
 # Environment variables
 .env
