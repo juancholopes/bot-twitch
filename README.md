@@ -1,6 +1,6 @@
 # Twitch Bot - Task Management System
 
-A modular bot for Twitch that allows users to manage their daily tasks directly from the chat.
+A modular bot for Twitch that allows users to manage their daily tasks directly from the chat. Built with TypeScript for type safety and better developer experience.
 
 ## Features
 
@@ -15,28 +15,36 @@ A modular bot for Twitch that allows users to manage their daily tasks directly 
 
 ```
 bot-twich/
-├── app.js                  # Main entry point
+├── app.ts                  # Main entry point
 ├── src/
-│   ├── bot.js             # Main Twitch bot logic
-│   ├── server.js          # Express web server
+│   ├── bot.ts             # Main Twitch bot logic
+│   ├── server.ts          # Express web server
 │   ├── config/
-│   │   └── environment.js  # Configuration and environment variables
+│   │   └── environment.ts  # Configuration and environment variables
 │   ├── services/
-│   │   └── taskService.js  # Task management service
+│   │   ├── taskService.ts  # Task management service
+│   │   └── spotifyService.ts  # Spotify integration service
 │   ├── commands/
-│   │   ├── index.js       # Command exporter
-│   │   ├── mytasks.js     # !mytasks command
-│   │   ├── task.js        # !task command
-│   │   ├── done.js        # !done command
-│   │   ├── cleardone.js   # !cleardone command
-│   │   ├── delete.js      # !delete command
-│   │   └── hello.js       # !hello command
+│   │   ├── index.ts       # Command exporter
+│   │   ├── mytasks.ts     # !mytasks command
+│   │   ├── task.ts        # !task command
+│   │   ├── done.ts        # !done command
+│   │   ├── cleardone.ts   # !cleardone command
+│   │   ├── delete.ts      # !delete command
+│   │   ├── hello.ts       # !hello command
+│   │   └── help.ts        # !help command
+│   ├── routes/
+│   │   └── spotify.routes.ts  # Spotify API routes
 │   └── utils/
-│       ├── logger.js      # Logging system
-│       └── helpers.js     # Helper functions
+│       ├── logger.ts      # Logging system
+│       ├── helpers.ts     # Helper functions
+│       ├── validators.ts  # Input validation
+│       └── rateLimiter.ts # Rate limiting
+├── dist/                  # Compiled JavaScript (generated)
 ├── data/
 │   └── tasks.json         # Task storage
 ├── .env                   # Environment variables
+├── tsconfig.json          # TypeScript configuration
 └── package.json
 ```
 
@@ -65,10 +73,15 @@ bot-twich/
    CHANEL_NAME=your_channel_name
    ```
 
-4. **Run the application**
+4. **Build and run the application**
    ```bash
+   # Build TypeScript
+   npm run build
+   
+   # Run in production
    npm start
-   # or for development
+   
+   # or for development (with auto-reload)
    npm run dev
    ```
 
