@@ -1,13 +1,18 @@
+import type { ChatUserstate, Client } from 'tmi.js';
 import taskService from '../services/taskService';
-import logger from '../utils/logger';
 import {
+	formatCompletedTasks,
 	parseTaskNumbers,
 	validateTaskNumbers,
-	formatCompletedTasks,
 } from '../utils/helpers';
-import type { Client, ChatUserstate } from 'tmi.js';
+import logger from '../utils/logger';
 
-export const handleDoneTask = async (client: Client, channel: string, tags: ChatUserstate, taskNumbersInput: string): Promise<void> => {
+export const handleDoneTask = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+	taskNumbersInput: string,
+): Promise<void> => {
 	try {
 		if (!taskNumbersInput) {
 			await client.say(
@@ -44,12 +49,15 @@ export const handleDoneTask = async (client: Client, channel: string, tags: Chat
 		if (invalidNumbers.length > 0) {
 			await client.say(
 				channel,
-				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(", ")}. Tienes ${user.task.length} tarea(s).`,
+				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(', ')}. Tienes ${user.task.length} tarea(s).`,
 			);
 			return;
 		}
 
-		const result = await taskService.completeTasks(tags.username!, validNumbers);
+		const result = await taskService.completeTasks(
+			tags.username!,
+			validNumbers,
+		);
 
 		if (!result.success) {
 			await client.say(
@@ -70,7 +78,7 @@ export const handleDoneTask = async (client: Client, channel: string, tags: Chat
 			result.completedTasks,
 		);
 	} catch (error) {
-		logger.error("Error en comando done:", error);
+		logger.error('Error en comando done:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al procesar las tareas completadas.`,

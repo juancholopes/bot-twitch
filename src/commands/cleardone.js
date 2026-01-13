@@ -1,5 +1,5 @@
-const taskService = require("../services/taskService");
-const logger = require("../utils/logger");
+const taskService = require('../services/taskService');
+const logger = require('../utils/logger');
 
 const handleClearDone = async (client, channel, tags) => {
 	try {
@@ -29,7 +29,7 @@ const handleClearDone = async (client, channel, tags) => {
 			`Usuario ${tags.username} limpió ${result.clearedCount} tareas completadas`,
 		);
 	} catch (error) {
-		logger.error("Error en comando cleardone:", error);
+		logger.error('Error en comando cleardone:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al limpiar las tareas completadas.`,

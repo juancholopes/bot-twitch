@@ -1,9 +1,13 @@
+import type { ChatUserstate, Client } from 'tmi.js';
 import taskService from '../services/taskService';
-import logger from '../utils/logger';
 import { formatTaskList } from '../utils/helpers';
-import type { Client, ChatUserstate } from 'tmi.js';
+import logger from '../utils/logger';
 
-export const handleMyTasks = async (client: Client, channel: string, tags: ChatUserstate): Promise<void> => {
+export const handleMyTasks = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+): Promise<void> => {
 	try {
 		const user = await taskService.findUser(tags.username!);
 
@@ -25,7 +29,7 @@ export const handleMyTasks = async (client: Client, channel: string, tags: ChatU
 
 		logger.info(`Usuario ${tags.username} consultó sus tareas`);
 	} catch (error) {
-		logger.error("Error en comando mytasks:", error);
+		logger.error('Error en comando mytasks:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al consultar las tareas.`,

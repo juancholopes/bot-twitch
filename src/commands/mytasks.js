@@ -1,6 +1,6 @@
-const taskService = require("../services/taskService");
-const logger = require("../utils/logger");
-const { formatTaskList } = require("../utils/helpers");
+const taskService = require('../services/taskService');
+const logger = require('../utils/logger');
+const { formatTaskList } = require('../utils/helpers');
 
 const handleMyTasks = async (client, channel, tags) => {
 	try {
@@ -24,7 +24,7 @@ const handleMyTasks = async (client, channel, tags) => {
 
 		logger.info(`Usuario ${tags.username} consultó sus tareas`);
 	} catch (error) {
-		logger.error("Error en comando mytasks:", error);
+		logger.error('Error en comando mytasks:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al consultar las tareas.`,
