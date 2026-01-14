@@ -121,6 +121,55 @@ importers:
         specifier: ^7.1.2
         version: 7.1.5(@types/node@25.0.8)(tsx@4.21.0)
 
+  obs-overlay:
+    dependencies:
+      axios:
+        specifier: ^1.12.1
+        version: 1.12.1
+      react:
+        specifier: ^19.1.1
+        version: 19.1.1
+      react-dom:
+        specifier: ^19.1.1
+        version: 19.1.1(react@19.1.1)
+      react-window:
+        specifier: ^2.1.0
+        version: 2.1.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      socket.io-client:
+        specifier: ^4.8.1
+        version: 4.8.1
+      styled-components:
+        specifier: ^6.1.19
+        version: 6.1.19(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.33.0
+        version: 9.35.0
+      '@types/react':
+        specifier: ^19.1.10
+        version: 19.1.13
+      '@types/react-dom':
+        specifier: ^19.1.7
+        version: 19.1.9(@types/react@19.1.13)
+      '@vitejs/plugin-react':
+        specifier: ^5.0.0
+        version: 5.0.2(vite@7.1.5(@types/node@25.0.8)(tsx@4.21.0))
+      eslint:
+        specifier: ^9.33.0
+        version: 9.35.0
+      eslint-plugin-react-hooks:
+        specifier: ^5.2.0
+        version: 5.2.0(eslint@9.35.0)
+      eslint-plugin-react-refresh:
+        specifier: ^0.4.20
+        version: 0.4.20(eslint@9.35.0)
+      globals:
+        specifier: ^16.3.0
+        version: 16.4.0
+      vite:
+        specifier: ^7.1.2
+        version: 7.1.5(@types/node@25.0.8)(tsx@4.21.0)
+
 packages:
 
   '@babel/code-frame@7.27.1':
