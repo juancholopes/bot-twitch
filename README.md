@@ -647,7 +647,7 @@ El proyecto usa un logger centralizado con niveles de severidad:
 
 ### Autor
 
-**Juan Camilo López**  
+**Juan Carlos López**  
 Desarrollador enfocado en soluciones que mejoran la experiencia de comunidades en línea.
 
 ### Licencia
