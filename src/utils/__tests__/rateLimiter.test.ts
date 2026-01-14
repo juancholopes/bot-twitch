@@ -1,4 +1,5 @@
 jest.mock('../logger', () => ({
+	__esModule: true,
 	default: {
 		warn: jest.fn(),
 	},
@@ -6,6 +7,7 @@ jest.mock('../logger', () => ({
 
 // Mock config BEFORE importing RateLimiter - use correct path
 jest.mock('../../config/environment', () => ({
+	__esModule: true,
 	default: {
 		rateLimit: {
 			default: {

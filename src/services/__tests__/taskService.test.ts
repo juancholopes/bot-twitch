@@ -15,6 +15,7 @@ jest.mock('fs', () => {
 
 // Mock config
 jest.mock('../../config/environment', () => ({
+	__esModule: true,
 	default: {
 		tasks: {
 			dataFile: './data/test-tasks.json',
@@ -24,6 +25,7 @@ jest.mock('../../config/environment', () => ({
 
 // Mock logger
 jest.mock('../../utils/logger', () => ({
+	__esModule: true,
 	default: {
 		error: jest.fn(),
 		info: jest.fn(),

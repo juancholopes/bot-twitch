@@ -1,8 +1,8 @@
-import express, { type Request, type Response } from 'express';
+import express, { type Request, type Response, type Router } from 'express';
 import spotifyService from '../services/spotifyService';
 import logger from '../utils/logger';
 
-const router = express.Router();
+const router: Router = express.Router();
 
 // Login route
 router.get('/api/spotify/login', (_req: Request, res: Response) => {
