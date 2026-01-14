@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import AnimatedTaskItem from "./AnimatedTaskItem";
 import type { UserTasks, Task } from "../types/models";

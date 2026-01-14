@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
-import React from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import CompactTaskList from './components/CompactTaskList';
 import SpotifyWidget from './components/spotify/SpotifyWidget';
