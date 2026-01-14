@@ -1,4 +1,4 @@
-const spotifyService = require('./src/services/spotifyService');
+import spotifyService from './src/services/spotifyService';
 
 async function test() {
     console.log('Testing Spotify Service Configuration...');
@@ -17,7 +17,7 @@ async function test() {
             console.log('ℹ️ No music playing or empty state.');
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Test failed:', error.message);
         if (error.response) {
             console.error('   API Response:', error.response.data);

@@ -1,24 +1,26 @@
-const express = require('express');
+import express, { type Request, type Response } from 'express';
+import spotifyService from '../services/spotifyService';
+import logger from '../utils/logger';
+
 const router = express.Router();
-const spotifyService = require('../services/spotifyService');
-const logger = require('../utils/logger');
 
 // Login route
-router.get('/api/spotify/login', (req, res) => {
-    const authUrl = spotifyService.getAuthorizationUrl();
-    res.redirect(authUrl);
+router.get('/api/spotify/login', (_req: Request, res: Response) => {
+	const authUrl = spotifyService.getAuthorizationUrl();
+	res.redirect(authUrl);
 });
 
 // Callback route - NOTE: This must match REDIRECT_URI exactly
-router.get('/callback', async (req, res) => {
-    const code = req.query.code || null;
-    if (!code) {
-        return res.redirect('/?error=invalid_code');
-    }
+router.get('/callback', async (req: Request, res: Response) => {
+	const code = (req.query.code as string) || null;
+	if (!code) {
+		return res.redirect('/?error=invalid_code');
+	}
 
-    try {
-        const { accessToken, refreshToken } = await spotifyService.getTokensFromCode(code);
-        res.send(`
+	try {
+		const { access_token: accessToken, refresh_token: refreshToken } =
+			await spotifyService.getTokensFromCode(code);
+		res.send(`
             <html>
                 <body style="font-family: sans-serif; background: #121212; color: white; text-align: center; padding: 50px;">
                     <h1 style="color: #1DB954;">Spotify Connected!</h1>
@@ -32,21 +34,21 @@ router.get('/callback', async (req, res) => {
                 </body>
             </html>
         `);
-    } catch (error) {
-        logger.error('Callback error:', error);
-        res.redirect('/?error=token_error');
-    }
+	} catch (error) {
+		logger.error('Callback error:', error);
+		res.redirect('/?error=token_error');
+	}
 });
 
 // Player state route
-router.get('/api/spotify/player', async (req, res) => {
-    try {
-        const playerState = await spotifyService.getPlayerState();
-        res.json(playerState || { is_playing: false });
-    } catch (error) {
-        logger.error('Route error /player:', error);
-        res.status(500).json({ error: 'Failed to fetch player state' });
-    }
+router.get('/api/spotify/player', async (_req: Request, res: Response) => {
+	try {
+		const playerState = await spotifyService.getPlayerState();
+		res.json(playerState || { is_playing: false });
+	} catch (error) {
+		logger.error('Route error /player:', error);
+		res.status(500).json({ error: 'Failed to fetch player state' });
+	}
 });
 
-module.exports = router;
+export default router;

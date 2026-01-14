@@ -1,12 +1,20 @@
-const taskService = require("../services/taskService");
-const config = require("../config/environment");
-const logger = require("../utils/logger");
-const Validators = require("../utils/validators");
+import type { ChatUserstate, Client } from 'tmi.js';
+import config from '../config/environment';
+import taskService from '../services/taskService';
+import logger from '../utils/logger';
+import Validators from '../utils/validators';
 
-const handleAddTask = async (client, channel, tags, taskInput) => {
+export const handleAddTask = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+	taskInput: string,
+): Promise<void> => {
 	try {
+		if (!tags.username) return;
+		
 		const validTasks = taskInput
-			.split(",")
+			.split(',')
 			.map((task) => Validators.sanitizeTask(task))
 			.filter((task) => task.length > 0);
 
@@ -19,9 +27,11 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 		}
 
 		// Normalize to uppercase for storage
-		const taskList = validTasks.map(task => task.toUpperCase());
+		const taskList = validTasks.map((task) => task.toUpperCase());
 
-		const currentTaskCount = await taskService.getUserTaskCount(tags.username);
+		const currentTaskCount = await taskService.getUserTaskCount(
+			tags.username,
+		);
 		const availableSlots = config.tasks.maxTasksPerUser - currentTaskCount;
 
 		if (availableSlots <= 0) {
@@ -45,7 +55,7 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 			return;
 		}
 
-		let confirmationMessage = `@${tags.username}, agregaste ${tasksToAdd.length} tarea(s): ${tasksToAdd.map((t) => t.toLowerCase()).join(", ")}`;
+		let confirmationMessage = `@${tags.username}, agregaste ${tasksToAdd.length} tarea(s): ${tasksToAdd.map((t) => t.toLowerCase()).join(', ')}`;
 
 		if (tasksRejected > 0) {
 			confirmationMessage += `. Se rechazaron ${tasksRejected} tarea(s) porque excederían el límite de ${config.tasks.maxTasksPerUser} tareas por usuario.`;
@@ -57,7 +67,7 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 			tasksToAdd,
 		);
 	} catch (error) {
-		logger.error("Error en comando task:", error);
+		logger.error('Error en comando task:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al procesar las tareas.`,
@@ -65,11 +75,13 @@ const handleAddTask = async (client, channel, tags, taskInput) => {
 	}
 };
 
-const handleTaskHelp = async (client, channel, tags) => {
+export const handleTaskHelp = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+): Promise<void> => {
 	await client.say(
 		channel,
 		`Debes incluir al menos una tarea ${tags.username}, por ejemplo "!task tarea1, tarea2, tarea3, maximo 5 tareas."`,
 	);
 };
-
-module.exports = { handleAddTask, handleTaskHelp };

@@ -1,15 +1,18 @@
-const TwitchBot = require("./src/bot");
-const WebServer = require("./src/server");
-const logger = require("./src/utils/logger");
+import TwitchBot from "./src/bot";
+import WebServer from "./src/server";
+import logger from "./src/utils/logger";
 
 class Application {
+	private bot: TwitchBot;
+	private server: WebServer;
+
 	constructor() {
 		this.bot = new TwitchBot();
 		this.server = new WebServer();
 		this.setupGracefulShutdown();
 	}
 
-	async start() {
+	async start(): Promise<void> {
 		try {
 			logger.info("Iniciando aplicación...");
 
@@ -26,7 +29,7 @@ class Application {
 		}
 	}
 
-	async stop() {
+	async stop(): Promise<void> {
 		try {
 			logger.info("Deteniendo aplicación...");
 
@@ -39,8 +42,8 @@ class Application {
 		}
 	}
 
-	setupGracefulShutdown() {
-		const signals = ["SIGTERM", "SIGINT"];
+	private setupGracefulShutdown(): void {
+		const signals: NodeJS.Signals[] = ["SIGTERM", "SIGINT"];
 
 		signals.forEach((signal) => {
 			process.on(signal, async () => {
@@ -68,4 +71,4 @@ if (require.main === module) {
 	app.start();
 }
 
-module.exports = Application;
+export default Application;

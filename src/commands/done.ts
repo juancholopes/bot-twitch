@@ -1,13 +1,21 @@
-const taskService = require("../services/taskService");
-const logger = require("../utils/logger");
-const {
+import type { ChatUserstate, Client } from 'tmi.js';
+import taskService from '../services/taskService';
+import {
+	formatCompletedTasks,
 	parseTaskNumbers,
 	validateTaskNumbers,
-	formatCompletedTasks,
-} = require("../utils/helpers");
+} from '../utils/helpers';
+import logger from '../utils/logger';
 
-const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
+export const handleDoneTask = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+	taskNumbersInput: string,
+): Promise<void> => {
 	try {
+		if (!tags.username) return;
+		
 		if (!taskNumbersInput) {
 			await client.say(
 				channel,
@@ -43,12 +51,15 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 		if (invalidNumbers.length > 0) {
 			await client.say(
 				channel,
-				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(", ")}. Tienes ${user.task.length} tarea(s).`,
+				`@${tags.username}, números de tarea no válidos: ${invalidNumbers.join(', ')}. Tienes ${user.task.length} tarea(s).`,
 			);
 			return;
 		}
 
-		const result = await taskService.completeTasks(tags.username, validNumbers);
+		const result = await taskService.completeTasks(
+			tags.username,
+			validNumbers,
+		);
 
 		if (!result.success) {
 			await client.say(
@@ -58,23 +69,21 @@ const handleDoneTask = async (client, channel, tags, taskNumbersInput) => {
 			return;
 		}
 
-		const taskList = formatCompletedTasks(result.completedTasks);
+		const taskList = formatCompletedTasks(result.completedTasks || []);
 		await client.say(
 			channel,
 			`@${tags.username}, marcaste como completada(s): ${taskList}. ¡Felicidades!`,
 		);
 
 		logger.info(
-			`Usuario ${tags.username} completó ${result.completedTasks.length} tareas`,
+			`Usuario ${tags.username} completó ${result.completedTasks?.length || 0} tareas`,
 			result.completedTasks,
 		);
 	} catch (error) {
-		logger.error("Error en comando done:", error);
+		logger.error('Error en comando done:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al procesar las tareas completadas.`,
 		);
 	}
 };
-
-module.exports = { handleDoneTask };

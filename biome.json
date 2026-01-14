@@ -4,7 +4,6 @@
 		"rules": {
 			"recommended": true,
 			"style": {
-				"noVar": "error",
 				"useConst": "error"
 			},
 			"correctness": {
@@ -14,17 +13,13 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "space",
-		"indentSize": 4
+		"indentStyle": "tab",
+		"indentWidth": 4
 	},
 	"javascript": {
 		"formatter": {
 			"semicolons": "always",
 			"quoteStyle": "single"
 		}
-	},
-	"files": {
-		"include": ["src/**/*.js", "app.js"],
-		"ignore": ["node_modules/**", "data/**"]
 	}
 }

@@ -1,11 +1,29 @@
-const { RateLimiter } = require('../rateLimiter');
-
 jest.mock('../logger', () => ({
-	warn: jest.fn(),
+	default: {
+		warn: jest.fn(),
+	},
 }));
 
+// Mock config BEFORE importing RateLimiter - use correct path
+jest.mock('../../config/environment', () => ({
+	default: {
+		rateLimit: {
+			default: {
+				max: 5,
+				windowMs: 10000,
+			},
+			heavy: {
+				max: 2,
+				windowMs: 30000,
+			},
+		},
+	},
+}));
+
+import { RateLimiter } from '../rateLimiter';
+
 describe('RateLimiter', () => {
-	let limiter;
+	let limiter: RateLimiter;
 
 	beforeEach(() => {
 		jest.useFakeTimers();
@@ -52,11 +70,11 @@ describe('RateLimiter', () => {
 		limiter = new RateLimiter({ maxRequests: 1, windowMs: 1000 });
 
 		limiter.checkLimit('user1');
-		expect(limiter.requests.has('user1')).toBe(true);
+		expect((limiter as any).requests.has('user1')).toBe(true);
 
 		jest.advanceTimersByTime(1001);
-		limiter.cleanup();
+		(limiter as any).cleanup();
 
-		expect(limiter.requests.has('user1')).toBe(false);
+		expect((limiter as any).requests.has('user1')).toBe(false);
 	});
 });
