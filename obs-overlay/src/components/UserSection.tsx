@@ -29,8 +29,8 @@ interface UserSectionProps {
 
 const UserSection: React.FC<UserSectionProps> = ({ user }) => {
   const allTasks = [
-    ...user.task.map(task => ({ text: task, completed: false })),
-    ...user.completed.map(task => ({ text: task, completed: true }))
+    ...(user.task?.map(task => ({ text: task, completed: false })) || []),
+    ...(user.completed?.map(task => ({ text: task, completed: true })) || [])
   ];
 
   return (

@@ -9,8 +9,8 @@ export interface Task {
 
 export interface UserTasks {
   user: string;
-  task: string[];
-  completed: string[];
+  task?: string[];
+  completed?: string[];
 }
 
 // Spotify-related types
