@@ -31,7 +31,7 @@ const useSpotify = (): UseSpotifyReturn => {
     } catch (err) {
       const errorMessage = err instanceof Error 
         ? err 
-        : new Error(`Failed to fetch player state: ${JSON.stringify(err)}`);
+        : new Error('Failed to fetch player state');
       setError(errorMessage);
       setIsPlaying(false);
     } finally {

@@ -3,6 +3,9 @@ import styled, { keyframes } from "styled-components";
 import AnimatedTaskItem from "./AnimatedTaskItem";
 import type { UserTasks, Task } from "../types/models";
 
+// Maximum number of tasks that fit in viewport before enabling infinite scroll
+const MAX_VISIBLE_TASKS = 10;
+
 const slideIn = keyframes`
   from {
     opacity: 0;
@@ -152,8 +155,7 @@ const CompactTaskList: React.FC<CompactTaskListProps> = ({ tasks = [], loading =
     });
 
     // Conditional repetition: only repeat if total tasks exceed viewport capacity
-    const maxVisible = 10; // Approximate number of tasks that fit in 340px container
-    const isInfinite = totalTasks > maxVisible;
+    const isInfinite = totalTasks > MAX_VISIBLE_TASKS;
 
     if (isInfinite) {
       // Repeat tasks for infinite scroll effect
@@ -174,8 +176,7 @@ const CompactTaskList: React.FC<CompactTaskListProps> = ({ tasks = [], loading =
 
   // Continuous auto-scroll effect (only when tasks exceed viewport capacity)
   useEffect(() => {
-    const maxVisible = 10;
-    const isInfinite = totalTasks > maxVisible;
+    const isInfinite = totalTasks > MAX_VISIBLE_TASKS;
     if (!isInfinite || !displayTasks.length || !scrollContainerRef.current)
       return;
 
