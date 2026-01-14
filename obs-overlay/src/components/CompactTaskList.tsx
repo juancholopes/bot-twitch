@@ -115,24 +115,28 @@ const CompactTaskList: React.FC<CompactTaskListProps> = ({ tasks = [], loading =
 
       // Add pending tasks with index for sorting (creation order)
       user.task?.forEach((task, idx) => {
-        userGroups[user.user].pending.push({
-          id: `${user.user}-${task}-pending-${idx}`,
-          text: task,
-          username: user.user,
-          completed: false,
-          timestamp: idx, // Use index as proxy for creation order
-        });
+        if (task && task.trim()) {
+          userGroups[user.user].pending.push({
+            id: `${user.user}-${task}-pending-${idx}`,
+            text: task,
+            username: user.user,
+            completed: false,
+            timestamp: idx, // Use index as proxy for creation order
+          });
+        }
       });
 
       // Add completed tasks with index offset for sorting after pending
       user.completed?.forEach((task, idx) => {
-        userGroups[user.user].completed.push({
-          id: `${user.user}-${task}-completed-${idx}`,
-          text: task,
-          username: user.user,
-          completed: true,
-          timestamp: idx + (user.task?.length || 0), // Offset to sort after pending
-        });
+        if (task && task.trim()) {
+          userGroups[user.user].completed.push({
+            id: `${user.user}-${task}-completed-${idx}`,
+            text: task,
+            username: user.user,
+            completed: true,
+            timestamp: idx + (user.task?.length || 0), // Offset to sort after pending
+          });
+        }
       });
     });
 
