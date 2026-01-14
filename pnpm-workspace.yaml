@@ -1,4 +1,6 @@
 packages:
-  - 'packages/*'
+  - "."
+  - "obs-overlay"
+
 ignoredBuiltDependencies:
   - pg
