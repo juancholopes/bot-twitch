@@ -1,18 +1,29 @@
-const fs = require("fs").promises;
-const fsSync = require("fs");
-const path = require("path");
-const config = require("../config/environment");
-const logger = require("../utils/logger");
+import * as path from 'node:path';
+import * as fsSync from 'fs';
+import { promises as fs } from 'fs';
+import config from '../config/environment';
+import logger from '../utils/logger';
+
+interface UserTask {
+	user: string;
+	task: string[];
+	completed: string[];
+}
+
+type EventEmitter = (event: string) => void;
 
 class TaskService {
+	private dataFile: string;
+	private emitter: EventEmitter | null = null;
+	private writeQueue: Promise<boolean>;
+
 	constructor() {
 		this.dataFile = path.resolve(config.tasks.dataFile);
 		this.ensureDataFileExists();
-		this.emitter = null;
-		this.writeQueue = Promise.resolve();
+		this.writeQueue = Promise.resolve(true);
 	}
 
-	ensureDataFileExists() {
+	private ensureDataFileExists(): void {
 		const dataDir = path.dirname(this.dataFile);
 		if (!fsSync.existsSync(dataDir)) {
 			fsSync.mkdirSync(dataDir, { recursive: true });
@@ -22,21 +33,21 @@ class TaskService {
 		}
 	}
 
-	setEmitter(emitter) {
+	setEmitter(emitter: EventEmitter): void {
 		this.emitter = emitter;
 	}
 
-	async readTasks() {
+	async readTasks(): Promise<UserTask[]> {
 		try {
-			const data = await fs.readFile(this.dataFile, "utf8");
+			const data = await fs.readFile(this.dataFile, 'utf8');
 			return JSON.parse(data);
 		} catch (error) {
-			logger.error("Error reading tasks file:", error);
+			logger.error('Error reading tasks file:', error);
 			return [];
 		}
 	}
 
-	async writeTasks(users) {
+	async writeTasks(users: UserTask[]): Promise<boolean> {
 		const writeOp = this.writeQueue.then(async () => {
 			const tempFile = `${this.dataFile}.tmp`;
 			try {
@@ -47,22 +58,24 @@ class TaskService {
 				}
 				return true;
 			} catch (error) {
-				logger.error("Error writing tasks file:", error);
-				try { await fs.unlink(tempFile); } catch (e) { }
+				logger.error('Error writing tasks file:', error);
+				try {
+					await fs.unlink(tempFile);
+				} catch (_e) {}
 				return false;
 			}
 		});
 
-		this.writeQueue = writeOp.catch(() => { });
+		this.writeQueue = writeOp.catch(() => false);
 		return writeOp;
 	}
 
-	async findUser(username) {
+	async findUser(username: string): Promise<UserTask | undefined> {
 		const users = await this.readTasks();
 		return users.find((user) => user.user === username);
 	}
 
-	async getUserTaskCount(username) {
+	async getUserTaskCount(username: string): Promise<number> {
 		const user = await this.findUser(username);
 		if (!user) return 0;
 
@@ -71,7 +84,7 @@ class TaskService {
 		return pendingTasks + completedTasks;
 	}
 
-	async addTasks(username, tasks) {
+	async addTasks(username: string, tasks: string[]): Promise<boolean> {
 		const users = await this.readTasks();
 		const userIndex = users.findIndex((user) => user.user === username);
 
@@ -88,18 +101,25 @@ class TaskService {
 		return await this.writeTasks(users);
 	}
 
-	async completeTasks(username, taskNumbers) {
+	async completeTasks(
+		username: string,
+		taskNumbers: number[],
+	): Promise<{
+		success: boolean;
+		message?: string;
+		completedTasks?: string[];
+	}> {
 		const users = await this.readTasks();
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		if (!user.completed) user.completed = [];
 
 		const sortedNumbers = [...new Set(taskNumbers)].sort((a, b) => b - a);
-		const completedTasks = [];
+		const completedTasks: string[] = [];
 
 		for (const taskNumber of sortedNumbers) {
 			const taskIndex = taskNumber - 1;
@@ -114,12 +134,14 @@ class TaskService {
 		return { success, completedTasks };
 	}
 
-	async clearCompletedTasks(username) {
+	async clearCompletedTasks(
+		username: string,
+	): Promise<{ success: boolean; message?: string; clearedCount?: number }> {
 		const users = await this.readTasks();
 		const userIndex = users.findIndex((user) => user.user === username);
 
 		if (userIndex === -1)
-			return { success: false, message: "Usuario no encontrado" };
+			return { success: false, message: 'Usuario no encontrado' };
 
 		const user = users[userIndex];
 		const clearedCount = user.completed ? user.completed.length : 0;
@@ -129,9 +151,9 @@ class TaskService {
 		return { success, clearedCount };
 	}
 
-	async deleteAllTasks() {
+	async deleteAllTasks(): Promise<boolean> {
 		return await this.writeTasks([]);
 	}
 }
 
-module.exports = new TaskService();
+export default new TaskService();

@@ -1,5 +1,5 @@
-const spotifyService = require('./src/services/spotifyService');
-const logger = require('./src/utils/logger');
+import spotifyService from './src/services/spotifyService';
+import logger from './src/utils/logger';
 
 console.log('--- Spotify Token Utility ---');
 console.log('1. Open this URL in your browser:');
@@ -13,7 +13,7 @@ const code = process.argv[2];
 if (code) {
     console.log('\nExchanging code for tokens...');
     spotifyService.getTokensFromCode(code)
-        .then(({ accessToken, refreshToken }) => {
+        .then(({ access_token: accessToken, refresh_token: refreshToken }) => {
             console.log('\n--- SUCCESS ---');
             console.log('Access Token:', accessToken.substring(0, 20) + '...');
             console.log('Refresh Token:', refreshToken);

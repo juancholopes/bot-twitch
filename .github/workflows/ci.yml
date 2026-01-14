@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, typescript-refactor ]
+  pull_request:
+    branches: [ main, develop, typescript-refactor ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 10
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run linter
+      run: pnpm run lint
+      continue-on-error: true
+
+    - name: Run tests
+      run: pnpm test
+      env:
+        TWITCH_USERNAME: test_bot
+        OAUTH_TOKEN: oauth:test_token
+        CHANEL_NAME: test_channel
+        CLIENT_ID: test_client_id
+        CLIENT_SECRET: test_client_secret
+        NODE_ENV: test

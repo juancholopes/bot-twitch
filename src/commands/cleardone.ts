@@ -1,8 +1,15 @@
-const taskService = require("../services/taskService");
-const logger = require("../utils/logger");
+import type { ChatUserstate, Client } from 'tmi.js';
+import taskService from '../services/taskService';
+import logger from '../utils/logger';
 
-const handleClearDone = async (client, channel, tags) => {
+export const handleClearDone = async (
+	client: Client,
+	channel: string,
+	tags: ChatUserstate,
+): Promise<void> => {
 	try {
+		if (!tags.username) return;
+
 		const result = await taskService.clearCompletedTasks(tags.username);
 
 		if (!result.success) {
@@ -29,12 +36,10 @@ const handleClearDone = async (client, channel, tags) => {
 			`Usuario ${tags.username} limpió ${result.clearedCount} tareas completadas`,
 		);
 	} catch (error) {
-		logger.error("Error en comando cleardone:", error);
+		logger.error('Error en comando cleardone:', error);
 		await client.say(
 			channel,
 			`@${tags.username}, error al limpiar las tareas completadas.`,
 		);
 	}
 };
-
-module.exports = { handleClearDone };
