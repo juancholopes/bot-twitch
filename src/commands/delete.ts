@@ -10,11 +10,10 @@ export const handleDeleteAll = async (
 ): Promise<void> => {
 	try {
 		if (!tags.username) return;
-		
+
 		// Verificar si es el streamer
 		if (
-			tags.username.toLowerCase() !==
-			config.twitch.username.toLowerCase()
+			tags.username.toLowerCase() !== config.twitch.username.toLowerCase()
 		) {
 			await client.say(
 				channel,

@@ -10,7 +10,7 @@ export const handleMyTasks = async (
 ): Promise<void> => {
 	try {
 		if (!tags.username) return;
-		
+
 		const user = await taskService.findUser(tags.username);
 
 		if (user && user.task.length > 0) {

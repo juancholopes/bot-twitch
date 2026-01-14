@@ -18,7 +18,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 	}
 
 	try {
-		const { access_token: accessToken, refresh_token: refreshToken } =
+		const { access_token: _accessToken, refresh_token: refreshToken } =
 			await spotifyService.getTokensFromCode(code);
 		res.send(`
             <html>

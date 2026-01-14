@@ -1,6 +1,6 @@
+import * as path from 'node:path';
 import * as fsSync from 'fs';
 import { promises as fs } from 'fs';
-import * as path from 'path';
 import config from '../config/environment';
 import logger from '../utils/logger';
 
@@ -61,7 +61,7 @@ class TaskService {
 				logger.error('Error writing tasks file:', error);
 				try {
 					await fs.unlink(tempFile);
-				} catch (e) {}
+				} catch (_e) {}
 				return false;
 			}
 		});

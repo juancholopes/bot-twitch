@@ -1,3 +1,5 @@
+import http from 'node:http';
+import path from 'node:path';
 import cors from 'cors';
 import express, {
 	type Application,
@@ -5,8 +7,6 @@ import express, {
 	type Response,
 } from 'express';
 import { promises as fs } from 'fs';
-import http from 'http';
-import path from 'path';
 import { Server as SocketIOServer } from 'socket.io';
 import config from './config/environment';
 import spotifyRoutes from './routes/spotify.routes';
@@ -85,7 +85,7 @@ class WebServer {
 			try {
 				const data = await fs.readFile(tasksPath, 'utf8');
 				res.json(JSON.parse(data));
-			} catch (err) {
+			} catch (_err) {
 				res.status(500).json({ error: 'Failed to read tasks data' });
 			}
 		});

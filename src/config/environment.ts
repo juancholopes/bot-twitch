@@ -26,7 +26,7 @@ const requiredEnvVars: EnvVar[] = [
 	},
 ];
 
-const optionalEnvVars: EnvVar[] = [
+const _optionalEnvVars: EnvVar[] = [
 	{
 		name: 'REFRESH_TOKEN',
 		type: 'string',
@@ -127,7 +127,7 @@ function parseEnvValue(
 
 	if (type === 'number') {
 		const parsed = parseInt(value, 10);
-		if (isNaN(parsed)) return defaultValue;
+		if (Number.isNaN(parsed)) return defaultValue;
 		return parsed;
 	}
 

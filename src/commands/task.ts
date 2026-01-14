@@ -12,7 +12,7 @@ export const handleAddTask = async (
 ): Promise<void> => {
 	try {
 		if (!tags.username) return;
-		
+
 		const validTasks = taskInput
 			.split(',')
 			.map((task) => Validators.sanitizeTask(task))

@@ -15,7 +15,7 @@ export const handleDoneTask = async (
 ): Promise<void> => {
 	try {
 		if (!tags.username) return;
-		
+
 		if (!taskNumbersInput) {
 			await client.say(
 				channel,

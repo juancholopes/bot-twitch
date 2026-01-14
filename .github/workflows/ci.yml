@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, typescript-refactor ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, typescript-refactor ]
 
 jobs:
   test:

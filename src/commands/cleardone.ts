@@ -9,7 +9,7 @@ export const handleClearDone = async (
 ): Promise<void> => {
 	try {
 		if (!tags.username) return;
-		
+
 		const result = await taskService.clearCompletedTasks(tags.username);
 
 		if (!result.success) {

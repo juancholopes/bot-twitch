@@ -1,5 +1,5 @@
+import querystring from 'node:querystring';
 import axios from 'axios';
-import querystring from 'querystring';
 import config from '../config/environment';
 import logger from '../utils/logger';
 
@@ -142,7 +142,7 @@ class SpotifyService {
 				const response = await axios.get(
 					'https://api.spotify.com/v1/me/player',
 					{
-						headers: { Authorization: 'Bearer ' + token },
+						headers: { Authorization: `Bearer ${token}` },
 					},
 				);
 
@@ -151,7 +151,7 @@ class SpotifyService {
 				}
 				return response.data;
 			});
-		} catch (error) {
+		} catch (_error) {
 			return null; // Return null on failure to keep bot valid
 		}
 	}
@@ -179,8 +179,8 @@ class SpotifyService {
 
 				if (error.response && error.response.status === 429) {
 					const retryAfter =
-						(parseInt(error.response.headers['retry-after']) || 5) *
-						1000;
+						(parseInt(error.response.headers['retry-after'], 10) ||
+							5) * 1000;
 					logger.warn(
 						`Spotify Rate Limit. Waiting ${retryAfter / 1000}s`,
 					);
