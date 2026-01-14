@@ -29,7 +29,7 @@ const useSpotify = (): UseSpotifyReturn => {
       }
       setError(null);
     } catch (err) {
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error(String(err)));
       setIsPlaying(false);
     } finally {
       setLoading(false);
