@@ -17,7 +17,7 @@ const Command = styled.span`
   margin: 0 10px;
 `;
 
-const CommandBar = () => {
+const CommandBar: React.FC = () => {
   return (
     <Bar>
       <Command>!TASK</Command>

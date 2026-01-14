@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import TaskItem from './TaskItem';
+import type { UserTasks } from '../types/models';
 
 const Section = styled.div`
   margin: 20px 0;
@@ -22,7 +23,11 @@ const TaskList = styled.div`
   flex-direction: column;
 `;
 
-const UserSection = ({ user }) => {
+interface UserSectionProps {
+  user: UserTasks;
+}
+
+const UserSection: React.FC<UserSectionProps> = ({ user }) => {
   const allTasks = [
     ...user.task.map(task => ({ text: task, completed: false })),
     ...user.completed.map(task => ({ text: task, completed: true }))

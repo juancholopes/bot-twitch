@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import AnimatedTaskItem from "./AnimatedTaskItem";
+import type { UserTasks, Task } from "../types/models";
 
 const slideIn = keyframes`
   from {
@@ -87,21 +88,14 @@ const TaskList = styled.div`
   padding: 8px 0;
 `;
 
-const ScrollIndicator = styled.div`
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 1px;
-  opacity: ${(props) => (props.visible ? 1 : 0)};
-  transition: opacity 0.3s ease;
-`;
+interface CompactTaskListProps {
+  tasks?: UserTasks[];
+  loading?: boolean;
+  connected?: boolean;
+}
 
-const CompactTaskList = ({ tasks = [], loading = false }) => {
-  const scrollContainerRef = useRef(null);
+const CompactTaskList: React.FC<CompactTaskListProps> = ({ tasks = [], loading = false }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const totalTasks = useMemo(() => {
     return tasks.reduce((total, user) => {
@@ -114,7 +108,7 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
     if (!tasks.length) return [];
 
     // Group tasks by username
-    const userGroups = {};
+    const userGroups: Record<string, { pending: Task[]; completed: Task[] }> = {};
     tasks.forEach((user) => {
       if (!userGroups[user.user])
         userGroups[user.user] = { pending: [], completed: [] };
@@ -146,7 +140,7 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
     const sortedUsernames = Object.keys(userGroups).sort();
 
     // Flatten tasks: pending first, then completed for each user
-    const allTasks = [];
+    const allTasks: Task[] = [];
     sortedUsernames.forEach((username) => {
       const group = userGroups[username];
       allTasks.push(...group.pending);
@@ -159,7 +153,7 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
 
     if (isInfinite) {
       // Repeat tasks for infinite scroll effect
-      const repeatedTasks = [];
+      const repeatedTasks: Task[] = [];
       for (let i = 0; i < 20; i++) {
         allTasks.forEach((task, index) => {
           repeatedTasks.push({
@@ -182,7 +176,7 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
       return;
 
     const container = scrollContainerRef.current;
-    let animationId;
+    let animationId: number;
 
     const autoScroll = () => {
       if (container) {
@@ -253,4 +247,3 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
 };
 
 export default CompactTaskList;
-
