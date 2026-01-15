@@ -14,12 +14,22 @@ const Item = styled.div`
   }
 `;
 
-const TaskText = styled.span`
+interface TaskTextProps {
+  completed: boolean;
+}
+
+const TaskText = styled.span<TaskTextProps>`
   text-decoration: ${props => props.completed ? 'line-through' : 'none'};
   color: ${props => props.completed ? 'gray' : 'white'};
 `;
 
-const TaskItem = ({ task, index, completed }) => {
+interface TaskItemProps {
+  task: string;
+  index: number;
+  completed: boolean;
+}
+
+const TaskItem: React.FC<TaskItemProps> = ({ task, index, completed }) => {
   return (
     <Item>
       {index + 1}. <TaskText completed={completed}>{task}</TaskText>
