@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { io } from 'socket.io-client';
-import React from 'react';
+import { io, Socket } from 'socket.io-client';
 import styled, { createGlobalStyle } from 'styled-components';
 import CompactTaskList from './components/CompactTaskList';
 import SpotifyWidget from './components/spotify/SpotifyWidget';
+import type { UserTasks } from './types/models';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -120,15 +120,15 @@ const LoadingIndicator = styled.div`
 const API_URL = 'http://localhost:3000/api/tasks';
 
 function App() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [connected, setConnected] = useState(false);
+  const [tasks, setTasks] = useState<UserTasks[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [connected, setConnected] = useState<boolean>(false);
 
   useEffect(() => {
     fetchTasks();
 
-    const socket = io('http://localhost:3000', {
+    const socket: Socket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
       timeout: 5000,
     });
@@ -160,10 +160,10 @@ function App() {
     };
   }, []);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (): Promise<void> => {
     try {
       setError(null);
-      const response = await axios.get(API_URL, {
+      const response = await axios.get<UserTasks[]>(API_URL, {
         timeout: 5000,
       });
       setTasks(response.data);

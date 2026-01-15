@@ -1,6 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import AnimatedTaskItem from "./AnimatedTaskItem";
+import type { UserTasks, Task } from "../types/models";
+
+// Maximum number of tasks that fit in viewport before enabling infinite scroll
+const MAX_VISIBLE_TASKS = 10;
 
 const slideIn = keyframes`
   from {
@@ -87,21 +91,14 @@ const TaskList = styled.div`
   padding: 8px 0;
 `;
 
-const ScrollIndicator = styled.div`
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 1px;
-  opacity: ${(props) => (props.visible ? 1 : 0)};
-  transition: opacity 0.3s ease;
-`;
+interface CompactTaskListProps {
+  tasks?: UserTasks[];
+  loading?: boolean;
+  connected?: boolean;
+}
 
-const CompactTaskList = ({ tasks = [], loading = false }) => {
-  const scrollContainerRef = useRef(null);
+const CompactTaskList: React.FC<CompactTaskListProps> = ({ tasks = [], loading = false }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const totalTasks = useMemo(() => {
     return tasks.reduce((total, user) => {
@@ -114,31 +111,35 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
     if (!tasks.length) return [];
 
     // Group tasks by username
-    const userGroups = {};
+    const userGroups: Record<string, { pending: Task[]; completed: Task[] }> = {};
     tasks.forEach((user) => {
       if (!userGroups[user.user])
         userGroups[user.user] = { pending: [], completed: [] };
 
       // Add pending tasks with index for sorting (creation order)
       user.task?.forEach((task, idx) => {
-        userGroups[user.user].pending.push({
-          id: `${user.user}-${task}-pending-${idx}`,
-          text: task,
-          username: user.user,
-          completed: false,
-          timestamp: idx, // Use index as proxy for creation order
-        });
+        if (task && task.trim()) {
+          userGroups[user.user].pending.push({
+            id: `${user.user}-${task}-pending-${idx}`,
+            text: task,
+            username: user.user,
+            completed: false,
+            timestamp: idx, // Use index as proxy for creation order
+          });
+        }
       });
 
       // Add completed tasks with index offset for sorting after pending
       user.completed?.forEach((task, idx) => {
-        userGroups[user.user].completed.push({
-          id: `${user.user}-${task}-completed-${idx}`,
-          text: task,
-          username: user.user,
-          completed: true,
-          timestamp: idx + (user.task?.length || 0), // Offset to sort after pending
-        });
+        if (task && task.trim()) {
+          userGroups[user.user].completed.push({
+            id: `${user.user}-${task}-completed-${idx}`,
+            text: task,
+            username: user.user,
+            completed: true,
+            timestamp: idx + (user.task?.length || 0), // Offset to sort after pending
+          });
+        }
       });
     });
 
@@ -146,7 +147,7 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
     const sortedUsernames = Object.keys(userGroups).sort();
 
     // Flatten tasks: pending first, then completed for each user
-    const allTasks = [];
+    const allTasks: Task[] = [];
     sortedUsernames.forEach((username) => {
       const group = userGroups[username];
       allTasks.push(...group.pending);
@@ -154,12 +155,11 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
     });
 
     // Conditional repetition: only repeat if total tasks exceed viewport capacity
-    const maxVisible = 10; // Approximate number of tasks that fit in 340px container
-    const isInfinite = totalTasks > maxVisible;
+    const isInfinite = totalTasks > MAX_VISIBLE_TASKS;
 
     if (isInfinite) {
       // Repeat tasks for infinite scroll effect
-      const repeatedTasks = [];
+      const repeatedTasks: Task[] = [];
       for (let i = 0; i < 20; i++) {
         allTasks.forEach((task, index) => {
           repeatedTasks.push({
@@ -176,13 +176,12 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
 
   // Continuous auto-scroll effect (only when tasks exceed viewport capacity)
   useEffect(() => {
-    const maxVisible = 10;
-    const isInfinite = totalTasks > maxVisible;
+    const isInfinite = totalTasks > MAX_VISIBLE_TASKS;
     if (!isInfinite || !displayTasks.length || !scrollContainerRef.current)
       return;
 
     const container = scrollContainerRef.current;
-    let animationId;
+    let animationId: number;
 
     const autoScroll = () => {
       if (container) {
@@ -253,4 +252,3 @@ const CompactTaskList = ({ tasks = [], loading = false }) => {
 };
 
 export default CompactTaskList;
-

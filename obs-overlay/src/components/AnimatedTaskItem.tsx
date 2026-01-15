@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled, { keyframes, css } from 'styled-components';
+import type { Task } from '../types/models';
 
 const fadeIn = keyframes`
   from {
@@ -24,7 +25,11 @@ const completionPulse = keyframes`
   }
 `;
 
-const ItemContainer = styled.div`
+interface ItemContainerProps {
+  completed: boolean;
+}
+
+const ItemContainer = styled.div<ItemContainerProps>`
   padding: 8px 16px;
   margin: 2px 0;
   border-radius: 8px;
@@ -51,7 +56,11 @@ const TaskContent = styled.div`
   gap: 12px;
 `;
 
-const TaskText = styled.span`
+interface TaskTextProps {
+  completed: boolean;
+}
+
+const TaskText = styled.span<TaskTextProps>`
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 500;
   font-size: 14px;
@@ -86,7 +95,11 @@ const TaskText = styled.span`
   `}
 `;
 
-const UserBadge = styled.span`
+interface UserBadgeProps {
+  completed: boolean;
+}
+
+const UserBadge = styled.span<UserBadgeProps>`
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-weight: 400;
   font-size: 11px;
@@ -107,7 +120,11 @@ const UserBadge = styled.span`
   `}
 `;
 
-const StatusIndicator = styled.div`
+interface StatusIndicatorProps {
+  completed: boolean;
+}
+
+const StatusIndicator = styled.div<StatusIndicatorProps>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -119,8 +136,13 @@ const StatusIndicator = styled.div`
   `}
 `;
 
-const AnimatedTaskItem = ({ task, index }) => {
-  const [isVisible, setIsVisible] = useState(false);
+interface AnimatedTaskItemProps {
+  task: Task;
+  index: number;
+}
+
+const AnimatedTaskItem: React.FC<AnimatedTaskItemProps> = ({ task, index }) => {
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
     // Stagger animation based on index
