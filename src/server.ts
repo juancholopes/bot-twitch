@@ -8,10 +8,10 @@ import express, {
 } from 'express';
 import { promises as fs } from 'fs';
 import { Server as SocketIOServer } from 'socket.io';
-import config from './config/environment';
-import spotifyRoutes from './routes/spotify.routes';
-import taskService from './services/taskService';
-import logger from './utils/logger';
+import config from '@infrastructure/config/environment';
+import logger from '@infrastructure/logging/logger';
+import { spotifyRoutes } from '@features/spotify-integration';
+import { taskManagementService } from '@features/task-management';
 
 class WebServer {
 	private app: Application;
@@ -24,7 +24,9 @@ class WebServer {
 		this.port = config.server.port;
 		this.server = http.createServer(this.app);
 		this.io = new SocketIOServer(this.server);
-		taskService.setEmitter((event: string) => this.io.emit(event));
+		taskManagementService.setEmitter((event: string) =>
+			this.io.emit(event),
+		);
 		this.setupRoutes();
 		this.setupSocket();
 	}
