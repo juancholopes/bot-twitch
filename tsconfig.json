@@ -16,15 +16,18 @@
 		"sourceMap": true,
 		"moduleResolution": "node",
 		"types": ["node", "jest"],
-		"allowSyntheticDefaultImports": true
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "./",
+		"paths": {
+			"@features/*": ["src/features/*"],
+			"@shared/*": ["src/shared/*"],
+			"@infrastructure/*": ["src/infrastructure/*"]
+		}
 	},
 	"include": [
 		"src/**/*.ts",
 		"app.ts",
-		"get-spotify-token.ts",
-		"set-spotify-token.ts",
-		"test-spotify.ts",
-		"test-player-endpoint.ts"
+		"scripts/**/*.ts"
 	],
 	"exclude": [
 		"node_modules",

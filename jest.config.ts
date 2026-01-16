@@ -13,6 +13,8 @@ export default {
 	],
 	moduleFileExtensions: ['ts', 'js', 'json', 'node'],
 	moduleNameMapper: {
-		'^@/(.*)$': '<rootDir>/src/$1',
+		'^@features/(.*)$': '<rootDir>/src/features/$1',
+		'^@shared/(.*)$': '<rootDir>/src/shared/$1',
+		'^@infrastructure/(.*)$': '<rootDir>/src/infrastructure/$1',
 	},
 };
