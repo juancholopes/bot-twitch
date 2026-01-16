@@ -12,8 +12,44 @@ interface UseTaskConnectionReturn {
 
 const API_URL = 'http://localhost:3000/api/tasks';
 
+// Datos de prueba para desarrollo
+const MOCK_TASKS: UserTasks[] = [
+  {
+    user: 'juancholopes',
+    task: [
+      'Implementar autenticación con OAuth',
+      'Refactorizar componentes de tareas',
+      'Mejorar estilos del overlay'
+    ],
+    completed: [
+      'Configurar WebSocket',
+      'Crear estructura base'
+    ]
+  },
+  {
+    user: 'viewer123',
+    task: [
+      'Agregar animaciones suaves',
+      'Optimizar rendimiento'
+    ],
+    completed: [
+      'Testear conexión'
+    ]
+  },
+  {
+    user: 'developer_pro',
+    task: [
+      'Documentar API endpoints'
+    ],
+    completed: []
+  }
+];
+
 export const useTaskConnection = (): UseTaskConnectionReturn => {
-  const [tasks, setTasks] = useState<UserTasks[]>([]);
+  // Inicializar con datos de prueba si estamos en desarrollo
+  const [tasks, setTasks] = useState<UserTasks[]>(
+    import.meta.env.DEV ? MOCK_TASKS : []
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState<boolean>(false);

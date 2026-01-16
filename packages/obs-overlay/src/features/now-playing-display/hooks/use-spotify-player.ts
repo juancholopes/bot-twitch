@@ -9,9 +9,35 @@ interface UseSpotifyPlayerReturn {
   error: Error | null;
 }
 
+// Datos de prueba para desarrollo
+const MOCK_TRACK: SpotifyTrack = {
+  id: 'mock-track-1',
+  name: 'LUNA',
+  artists: [
+    { id: '1', name: 'Feid' },
+    { id: '2', name: 'ATL Jacob' }
+  ],
+  album: {
+    id: 'mock-album-1',
+    name: 'FERXXOCALIPSIS',
+    images: [
+      { 
+        url: 'https://i.scdn.co/image/ab67616d0000b273f1aad814a40ec7419c234242',
+        height: 640,
+        width: 640
+      }
+    ]
+  },
+  duration_ms: 180000,
+  uri: 'spotify:track:mock'
+};
+
 export const useSpotifyPlayer = (): UseSpotifyPlayerReturn => {
-  const [currentTrack, setCurrentTrack] = useState<SpotifyTrack | null>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  // Inicializar con datos de prueba en modo desarrollo
+  const [currentTrack, setCurrentTrack] = useState<SpotifyTrack | null>(
+    import.meta.env.DEV ? MOCK_TRACK : null
+  );
+  const [isPlaying, setIsPlaying] = useState<boolean>(import.meta.env.DEV ? true : false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
