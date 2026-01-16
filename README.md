@@ -32,7 +32,7 @@ Este bot permite a los usuarios del chat crear, visualizar y completar tareas pe
 
 ## Descripción General
 
-Bot modular para Twitch que permite gestionar tareas directamente desde el chat. Incluye integración con Spotify para mostrar la canción actual en transmisión y un sistema de overlay para OBS.
+Bot modular para Twitch que permite gestionar tareas directamente desde el chat. Incluye integración con Spotify para mostrar la canción actual en transmisión, un timer Pomodoro para gestión de tiempo en sesiones de estudio, y un sistema de overlay para OBS.
 
 **Stack tecnológico:**
 
@@ -67,10 +67,15 @@ bot-twitch/
 │   │   │   │   │   ├── task-management.service.ts
 │   │   │   │   │   ├── commands/  # !task, !done, !cleardone, etc.
 │   │   │   │   │   └── models.ts
-│   │   │   │   └── spotify-integration/
-│   │   │   │       ├── spotify-integration.service.ts
-│   │   │   │       ├── spotify.routes.ts
-│   │   │   │       └── models.ts
+│   │   │   │   ├── spotify-integration/
+│   │   │   │   │   ├── spotify-integration.service.ts
+│   │   │   │   │   ├── spotify.routes.ts
+│   │   │   │   │   └── models.ts
+│   │   │   │   └── pomodoro-timer/
+│   │   │   │       ├── pomodoro-timer.service.ts
+│   │   │   │       ├── pomodoro-config.service.ts
+│   │   │   │       ├── pomodoro-stats.service.ts
+│   │   │   │       └── pomodoro.routes.ts
 │   │   │   ├── infrastructure/    # Config, logging, rate-limiting
 │   │   │   │   ├── config/
 │   │   │   │   ├── logging/
@@ -85,9 +90,13 @@ bot-twitch/
 │       │   │   ├── stream-task-display/    # Lista de tareas en stream
 │       │   │   │   ├── stream-task-display.tsx
 │       │   │   │   └── components/
-│       │   │   └── now-playing-display/    # Widget de Spotify
-│       │   │       ├── now-playing-display.tsx
-│       │   │       └── components/
+│       │   │   ├── now-playing-display/    # Widget de Spotify
+│       │   │   │   ├── now-playing-display.tsx
+│       │   │   │   └── components/
+│       │   │   └── pomodoro-display/       # Timer Pomodoro
+│       │   │       ├── pomodoro-display.tsx
+│       │   │       ├── components/
+│       │   │       └── hooks/
 │       │   ├── shared/            # Estilos y componentes globales
 │       │   └── App.tsx            # Orquestador de features
 │       └── package.json
@@ -117,6 +126,7 @@ La estructura grita la funcionalidad del negocio:
 - `stream-task-display` - Muestra tareas en el stream
 - `now-playing-display` - Muestra la canción actual de Spotify
 - `task-management` - Gestiona tareas de usuarios
+- `pomodoro-timer` - Sistema de gestión de tiempo con técnica Pomodoro
 
 Los nombres de features describen **qué hace la aplicación**, no **cómo lo implementa**.
 
@@ -658,6 +668,9 @@ El proyecto usa un logger centralizado con niveles de severidad:
 | `GET` | `/health` | Health check | `{"status":"ok"}` |
 | `GET` | `/api/spotify/current-track` | Canción actual de Spotify | `{"name":"Song","artist":"Artist","isPlaying":true}` |
 | `GET` | `/api/tasks` | Todas las tareas | `[{user, tasks, completed}]` |
+| `GET` | `/api/pomodoro/state` | Estado actual del timer Pomodoro | `{"phase":"work","remainingSeconds":4800,"isRunning":true}` |
+| `GET` | `/api/pomodoro/config` | Configuración del timer | `{"workDuration":80,"shortBreakDuration":10}` |
+| `GET` | `/api/pomodoro/stats/today` | Estadísticas del día | `{"sessionsCompleted":3,"totalWorkTime":240}` |
 
 **Nota:** Los endpoints `/api/*` están protegidos con CORS configurado para permitir solo el origen del overlay.
 

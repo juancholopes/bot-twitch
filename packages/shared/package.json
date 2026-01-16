@@ -7,7 +7,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./task": "./dist/task/index.js",
-    "./spotify": "./dist/spotify/index.js"
+    "./spotify": "./dist/spotify/index.js",
+    "./pomodoro": "./dist/pomodoro/index.js"
   },
   "scripts": {
     "build": "tsc",

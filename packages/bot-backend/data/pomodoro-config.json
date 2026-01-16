@@ -1,0 +1,6 @@
+{
+  "workDuration": 80,
+  "shortBreakDuration": 10,
+  "longBreakDuration": 20,
+  "sessionsBeforeLongBreak": 5
+}

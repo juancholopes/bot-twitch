@@ -13,6 +13,12 @@ import config from '@infrastructure/config/environment';
 import logger from '@infrastructure/logging/logger';
 import { spotifyRoutes } from '@features/spotify-integration';
 import { taskManagementService } from '@features/task-management';
+import {
+	PomodoroConfigService,
+	PomodoroStatsService,
+	PomodoroTimerService,
+} from '@features/pomodoro-timer';
+import { createPomodoroRoutes } from '@features/pomodoro-timer/pomodoro.routes';
 
 // Define __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -23,12 +29,29 @@ class WebServer {
 	private port: number;
 	private server: http.Server;
 	private io: SocketIOServer;
+	
+	// Pomodoro services
+	private pomodoroConfigService: PomodoroConfigService;
+	private pomodoroStatsService: PomodoroStatsService;
+	private pomodoroTimerService: PomodoroTimerService;
 
 	constructor() {
 		this.app = express();
 		this.port = config.server.port;
 		this.server = http.createServer(this.app);
 		this.io = new SocketIOServer(this.server);
+		
+		// Initialize pomodoro services
+		this.pomodoroConfigService = new PomodoroConfigService();
+		this.pomodoroStatsService = new PomodoroStatsService();
+		this.pomodoroTimerService = new PomodoroTimerService(
+			this.pomodoroConfigService,
+			this.pomodoroStatsService
+		);
+		
+		// Setup pomodoro WebSocket events
+		this.setupPomodoroEvents();
+		
 		taskManagementService.setEmitter((event: string) =>
 			this.io.emit(event),
 		);
@@ -70,6 +93,14 @@ class WebServer {
 
 		// Spotify Routes
 		this.app.use('/', spotifyRoutes);
+		
+		// Pomodoro Routes
+		const pomodoroRoutes = createPomodoroRoutes(
+			this.pomodoroTimerService,
+			this.pomodoroConfigService,
+			this.pomodoroStatsService
+		);
+		this.app.use('/api/pomodoro', pomodoroRoutes);
 
 		this.app.get('/', (_req: Request, res: Response) => {
 			res.json({
@@ -103,10 +134,50 @@ class WebServer {
 			express.static(path.join(__dirname, '../../obs-overlay/dist')),
 		);
 	}
+	
+	/**
+	 * Setup Pomodoro timer WebSocket events
+	 */
+	private setupPomodoroEvents(): void {
+		// Emit tick events every second
+		this.pomodoroTimerService.on('tick', (state) => {
+			this.io.emit('pomodoro:tick', state);
+		});
+
+		// Emit phase change events
+		this.pomodoroTimerService.on('phaseChanged', (state) => {
+			this.io.emit('pomodoro:phaseChanged', state);
+			logger.info(`🍅 Pomodoro phase changed to: ${state.phase}`);
+		});
+
+		// Emit session completed events
+		this.pomodoroTimerService.on('sessionCompleted', (data) => {
+			this.io.emit('pomodoro:sessionCompleted', data);
+			logger.info(`🍅 Pomodoro session completed: ${data.phase}`);
+		});
+
+		// Emit pause/resume events
+		this.pomodoroTimerService.on('paused', (state) => {
+			this.io.emit('pomodoro:paused', state);
+		});
+
+		this.pomodoroTimerService.on('resumed', (state) => {
+			this.io.emit('pomodoro:resumed', state);
+		});
+
+		// Emit reset events
+		this.pomodoroTimerService.on('reset', (state) => {
+			this.io.emit('pomodoro:reset', state);
+		});
+	}
 
 	private setupSocket(): void {
 		this.io.on('connection', (socket: any) => {
 			logger.info('Client connected to WebSocket');
+			
+			// Send current pomodoro state immediately on connection
+			socket.emit('pomodoro:stateChanged', this.pomodoroTimerService.getState());
+			
 			socket.on('disconnect', () => {
 				logger.info('Client disconnected from WebSocket');
 			});
@@ -131,6 +202,9 @@ class WebServer {
 
 	stop(): Promise<void> {
 		return new Promise((resolve) => {
+			// Cleanup pomodoro timer
+			this.pomodoroTimerService.destroy();
+			
 			if (this.server) {
 				this.server.close(() => {
 					logger.info('Servidor web detenido');
