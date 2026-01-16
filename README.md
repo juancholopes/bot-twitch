@@ -1,5 +1,15 @@
 # Bot de Twitch - Sistema de Gestión de Tareas
 
+> 🏗️ **Nueva Arquitectura**: Este proyecto ahora sigue los principios de **Scope Rule** y **Screaming Architecture**. Ver [ARCHITECTURE.md](./ARCHITECTURE.md) para más detalles.
+
+## 📚 Documentación
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Principios y estructura de la arquitectura
+- **[ARCHITECTURE_DIAGRAM.md](./ARCHITECTURE_DIAGRAM.md)** - Diagramas visuales de la arquitectura
+- **[MIGRATION.md](./MIGRATION.md)** - Guía de migración de la arquitectura anterior
+
+---
+
 ## Tabla de Contenidos
 
 - [Problema que Resuelve](#problema-que-resuelve)
