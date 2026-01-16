@@ -4,10 +4,10 @@
 
 - [Problema que Resuelve](#problema-que-resuelve)
 - [Descripción General](#descripción-general)
+- [Arquitectura](#arquitectura)
 - [Decisiones Técnicas](#decisiones-técnicas)
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Comandos Disponibles](#comandos-disponibles)
-- [Arquitectura del Proyecto](#arquitectura-del-proyecto)
 - [Estimaciones y Complejidad](#estimaciones-y-complejidad)
 - [Qué Haría Diferente](#qué-haría-diferente)
 - [Desarrollo y Contribución](#desarrollo-y-contribución)
@@ -37,10 +37,158 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 **Stack tecnológico:**
 
 - **Backend:** Node.js con TypeScript, Express, tmi.js (cliente de Twitch IRC)
-- **Frontend (Overlay):** React con Vite
+- **Frontend (Overlay):** React 19 con Vite
 - **Almacenamiento:** Sistema de archivos JSON (persistencia simple)
 - **Testing:** Jest para pruebas unitarias
 - **Calidad de código:** Biome para linting y formateo
+- **Arquitectura:** Monorepo con pnpm workspaces
+
+---
+
+## Arquitectura
+
+### Estructura del Monorepo
+
+Este proyecto utiliza una arquitectura **monorepo** basada en **Scope Rule** y **Screaming Architecture**, organizando el código en tres paquetes independientes pero relacionados:
+
+```
+bot-twitch/
+├── packages/
+│   ├── shared/                    # Tipos compartidos (Single Source of Truth)
+│   │   ├── src/
+│   │   │   ├── task/              # Modelos de dominio de tareas
+│   │   │   └── spotify/           # Modelos de dominio de Spotify
+│   │   └── package.json
+│   │
+│   ├── bot-backend/               # Backend Node.js + Twitch Bot
+│   │   ├── src/
+│   │   │   ├── features/          # Features del bot
+│   │   │   │   ├── task-management/
+│   │   │   │   │   ├── task-management.service.ts
+│   │   │   │   │   ├── commands/  # !task, !done, !cleardone, etc.
+│   │   │   │   │   └── models.ts
+│   │   │   │   └── spotify-integration/
+│   │   │   │       ├── spotify-integration.service.ts
+│   │   │   │       ├── spotify.routes.ts
+│   │   │   │       └── models.ts
+│   │   │   ├── infrastructure/    # Config, logging, rate-limiting
+│   │   │   │   ├── config/
+│   │   │   │   ├── logging/
+│   │   │   │   └── rate-limiting/
+│   │   │   └── shared/            # Bot commands compartidos (!hello, !help)
+│   │   ├── app.ts                 # Punto de entrada
+│   │   └── package.json
+│   │
+│   └── obs-overlay/               # Frontend React para OBS
+│       ├── src/
+│       │   ├── features/
+│       │   │   ├── stream-task-display/    # Lista de tareas en stream
+│       │   │   │   ├── stream-task-display.tsx
+│       │   │   │   └── components/
+│       │   │   └── now-playing-display/    # Widget de Spotify
+│       │   │       ├── now-playing-display.tsx
+│       │   │       └── components/
+│       │   ├── shared/            # Estilos y componentes globales
+│       │   └── App.tsx            # Orquestador de features
+│       └── package.json
+│
+├── pnpm-workspace.yaml
+└── package.json
+```
+
+### Principios Arquitectónicos
+
+#### 1. Scope Rule (Regla Fundamental)
+
+**"El scope determina la estructura"**
+
+- Código usado por 2+ features → DEBE ir en `shared/` o `infrastructure/`
+- Código usado por 1 feature → DEBE quedarse local en esa feature
+- SIN EXCEPCIONES
+
+**Ejemplo:**
+- `Task` type está en `packages/shared/` porque lo usan `bot-backend` y `obs-overlay`
+- `task-management.service.ts` está en `features/task-management/` porque solo esa feature lo usa
+
+#### 2. Screaming Architecture
+
+La estructura grita la funcionalidad del negocio:
+
+- `stream-task-display` - Muestra tareas en el stream
+- `now-playing-display` - Muestra la canción actual de Spotify
+- `task-management` - Gestiona tareas de usuarios
+
+Los nombres de features describen **qué hace la aplicación**, no **cómo lo implementa**.
+
+#### 3. Container/Presentational Pattern
+
+- **Containers:** Manejan lógica de negocio, estado y datos (e.g., `stream-task-display.tsx`)
+- **Presentational:** Componentes puros que reciben props (e.g., `components/TaskItem.tsx`)
+- El container principal DEBE tener el mismo nombre que la feature
+
+### Flujo de Datos
+
+```
+Usuario en Twitch Chat
+         |
+         | (!task estudiar)
+         v
+bot-backend/app.ts (Cliente IRC)
+         |
+         | Parsea comando
+         v
+features/task-management/commands/task.command.ts
+         |
+         | Llama a servicio
+         v
+features/task-management/task-management.service.ts
+         |
+         | CRUD en tasks.json
+         v
+data/tasks.json
+         |
+         | WebSocket event
+         v
+obs-overlay/features/stream-task-display/
+         |
+         | Renderiza
+         v
+OBS Overlay en stream
+```
+
+### Patrones de Diseño
+
+| Patrón | Ubicación | Justificación |
+|--------|-----------|---------------|
+| **Command Pattern** | `bot-backend/features/*/commands/` | Cada comando es un módulo independiente |
+| **Service Layer** | `bot-backend/features/*/services` | Abstrae lógica de negocio |
+| **Repository Pattern** | `task-management.service.ts` | Abstrae acceso a datos |
+| **Monorepo** | `packages/*` | Comparte tipos entre frontend y backend |
+
+### Comandos de Desarrollo
+
+```bash
+# Instalar dependencias de todo el monorepo
+pnpm install
+
+# Desarrollo completo (backend + overlay + bot)
+pnpm run dev:full
+
+# Solo backend
+pnpm run dev
+
+# Solo overlay
+pnpm run dev:overlay
+
+# Tests
+pnpm test
+
+# Build de todos los paquetes
+pnpm run build
+
+# Linting
+pnpm run lint
+```
 
 ---
 
@@ -58,19 +206,33 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 
 **Trade-off:** Añade complejidad en la configuración inicial y requiere un paso de compilación, pero el beneficio en mantenibilidad supera el costo.
 
-### 2. Arquitectura de servicios separados
+### 2. Arquitectura de Monorepo con pnpm workspaces
 
-**Decisión:** Separar la lógica de negocio en servicios independientes (`taskService`, `spotifyService`) en lugar de acoplarla directamente en los comandos.
+**Decisión:** Reorganizar el proyecto en un monorepo con tres paquetes: `shared`, `bot-backend`, y `obs-overlay`.
 
-**Razón:** 
+**Razón:**
 
-- **Testabilidad:** Los servicios pueden probarse de manera aislada sin depender del cliente de Twitch
-- **Reutilización:** La lógica de tareas puede usarse tanto en comandos del bot como en endpoints HTTP
-- **Escalabilidad:** Si en el futuro se añade otra interfaz (Discord, CLI), los servicios ya están desacoplados
+- **Single Source of Truth:** Los tipos de `Task` y `SpotifyTrack` están en `packages/shared` y se comparten entre backend y frontend
+- **Independencia:** Cada paquete puede tener sus propias dependencias y configuración
+- **Escalabilidad:** Facilita añadir nuevos paquetes (e.g., un CLI, una app móvil)
 
-**Implementación:** Por ejemplo, `taskService.ts` maneja la persistencia y reglas de negocio, mientras que `task.ts` (comando) solo coordina la entrada del usuario y la respuesta.
+**Implementación:** Utilizamos pnpm workspaces para gestionar dependencias entre paquetes de forma eficiente.
 
-### 3. Almacenamiento en JSON vs Base de datos
+### 3. Scope Rule y Screaming Architecture
+
+**Decisión:** Aplicar estrictamente la Scope Rule para determinar dónde colocar cada archivo.
+
+**Razón:**
+
+- **Previene duplicación:** Si un tipo o función se usa en 2+ lugares, automáticamente se mueve a `shared`
+- **Facilita comprensión:** Un desarrollador nuevo puede entender qué hace la app solo viendo los nombres de las features
+- **Escalabilidad:** Cuando se añade una feature, es claro dónde va cada archivo
+
+**Ejemplo práctico:**
+- `CompactTaskList` component está en `stream-task-display/components/` porque solo esa feature lo usa
+- `global-styles.ts` está en `obs-overlay/shared/` porque `stream-task-display` y `now-playing-display` lo usan
+
+### 4. Almacenamiento en JSON vs Base de datos
 
 **Decisión:** Usar un archivo JSON para persistir datos en lugar de una base de datos (MySQL, PostgreSQL, MongoDB).
 
@@ -86,19 +248,19 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 - No tiene capacidades de consulta avanzadas
 - Escala verticalmente (todo en memoria)
 
-### 4. Rate Limiting personalizado
+### 5. Rate Limiting personalizado
 
-**Decisión:** Implementar un sistema de rate limiting propio en `rateLimiter.ts` en lugar de usar middleware de Express como `express-rate-limit`.
+**Decisión:** Implementar un sistema de rate limiting propio en `infrastructure/rate-limiting/rateLimiter.ts`.
 
 **Razón:**
 
 - Control granular por usuario de Twitch (no por IP)
 - Lógica específica: limitar comandos por usuario en ventanas de tiempo
-- Aprendizaje: implementar el algoritmo de "token bucket" desde cero demuestra comprensión de sistemas distribuidos
+- Aprendizaje: implementar el algoritmo de "token bucket" desde cero
 
 **Implementación:** Cada usuario tiene un bucket de tokens que se regenera cada X segundos. Esto previene spam sin afectar usuarios legítimos.
 
-### 5. Integración con Spotify
+### 6. Integración con Spotify
 
 **Decisión:** Añadir un servidor Express para manejar OAuth 2.0 con Spotify y exponer endpoints HTTP.
 
@@ -112,7 +274,7 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 
 1. Usuario autentifica con Spotify vía `/auth`
 2. Callback recibe el token y lo almacena
-3. Overlay consulta `/api/current-track` para mostrar la canción actual
+3. Overlay consulta `/api/spotify/current-track` para mostrar la canción actual
 
 ---
 
@@ -121,7 +283,7 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 ### Requisitos previos
 
 - Node.js >= 18.0.0
-- npm o pnpm instalado
+- pnpm instalado
 - Cuenta de Twitch con token OAuth ([Generar aquí](https://twitchapps.com/tmi/))
 - (Opcional) Cuenta de Spotify Developer para integración musical
 
@@ -132,26 +294,26 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 git clone https://github.com/juancholopes/bot-twitch.git
 cd bot-twitch
 
-# 2. Instalar dependencias
+# 2. Instalar dependencias (todo el monorepo)
 pnpm install
 
 # 3. Configurar variables de entorno
 cp .env.example .env
-# Editar .env con tus credenciales (ver sección siguiente)
+# Editar .env con tus credenciales
 
-# 4. Compilar TypeScript
+# También copiar .env en el paquete del backend
+cp .env packages/bot-backend/.env
+
+# 4. Compilar paquetes
 pnpm run build
 
-# 5. Ejecutar en producción
-pnpm start
-
-# O para desarrollo con auto-reload
-pnpm run dev
+# 5. Ejecutar en desarrollo (backend + overlay)
+pnpm run dev:full
 ```
 
 ### Configuración de variables de entorno
 
-Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
+Crear un archivo `.env` en la raíz del proyecto y en `packages/bot-backend/`:
 
 ```env
 # Configuración del servidor
@@ -179,11 +341,11 @@ REFRESH_TOKEN=tu_refresh_token
 
 ```bash
 # Verificar que el servidor inicia correctamente
-pnpm start
+pnpm run dev:full
 
 # En otra terminal, verificar el endpoint de salud
 curl http://localhost:3000/health
-# Debe responder: {"status":"ok","service":"twitch-bot"}
+# Debe responder: {"status":"ok"}
 ```
 
 ---
@@ -210,117 +372,16 @@ curl http://localhost:3000/health
 ### Reglas del sistema
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ LÍMITES POR USUARIO                                         │
-├─────────────────────────────────────────────────────────────┤
-│ • Máximo 5 tareas totales (pendientes + completadas)        │
-│ • Máximo 5 tareas por comando !task                         │
-│ • Cooldown de 10 segundos entre comandos                    │
-└─────────────────────────────────────────────────────────────┘
+LÍMITES POR USUARIO
+- Máximo 5 tareas totales (pendientes + completadas)
+- Máximo 5 tareas por comando !task
+- Cooldown de 10 segundos entre comandos
 
-┌─────────────────────────────────────────────────────────────┐
-│ FORMATO DE DATOS                                            │
-├─────────────────────────────────────────────────────────────┤
-│ • Las tareas se almacenan en MAYÚSCULAS internamente        │
-│ • Se muestran en minúsculas al usuario para legibilidad     │
-│ • Persistencia en archivo JSON en ./data/tasks.json         │
-└─────────────────────────────────────────────────────────────┘
+FORMATO DE DATOS
+- Las tareas se almacenan en MAYÚSCULAS internamente
+- Se muestran en minúsculas al usuario para legibilidad
+- Persistencia en archivo JSON en ./data/tasks.json
 ```
-
----
-
-## Arquitectura del Proyecto
-
-### Estructura de directorios
-
-```
-bot-twitch/
-│
-├── src/                          # Código fuente del backend
-│   ├── bot.ts                    # Cliente IRC de Twitch (punto de entrada)
-│   ├── server.ts                 # Servidor Express para APIs
-│   │
-│   ├── commands/                 # Comandos del bot (capa de presentación)
-│   │   ├── index.ts              # Exportador de comandos
-│   │   ├── task.ts               # !task - Agregar tareas
-│   │   ├── mytasks.ts            # !mytasks - Listar tareas
-│   │   ├── done.ts               # !done - Completar tareas
-│   │   ├── cleardone.ts          # !cleardone - Limpiar completadas
-│   │   ├── delete.ts             # !delete - Borrar todo (mod)
-│   │   └── help.ts               # !help - Ayuda
-│   │
-│   ├── services/                 # Lógica de negocio (capa de dominio)
-│   │   ├── taskService.ts        # Gestión de tareas (CRUD)
-│   │   └── spotifyService.ts     # Integración con Spotify API
-│   │
-│   ├── routes/                   # Rutas HTTP (capa de API)
-│   │   └── spotify.routes.ts     # Endpoints de Spotify
-│   │
-│   ├── utils/                    # Utilidades compartidas
-│   │   ├── logger.ts             # Sistema de logs con niveles
-│   │   ├── rateLimiter.ts        # Control de rate limiting
-│   │   ├── validators.ts         # Validación de entrada
-│   │   └── helpers.ts            # Funciones auxiliares
-│   │
-│   └── config/                   # Configuración
-│       └── environment.ts        # Variables de entorno tipadas
-│
-├── obs-overlay/                  # Frontend para OBS (React)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── CompactTaskList.jsx    # Lista de tareas en overlay
-│   │   │   ├── SpotifyWidget.jsx      # Widget de Spotify
-│   │   │   └── UserSection.jsx        # Sección de usuario
-│   │   ├── hooks/
-│   │   │   └── useSpotify.js          # Hook para consumir API
-│   │   └── App.jsx
-│   └── index.html                     # Página de overlay
-│
-├── data/                         # Persistencia
-│   └── tasks.json                # Almacenamiento de tareas
-│
-├── dist/                         # Código compilado (generado)
-├── app.ts                        # Punto de entrada principal
-├── tsconfig.json                 # Configuración TypeScript
-├── jest.config.ts                # Configuración de tests
-└── package.json
-```
-
-### Flujo de datos
-
-```
-Usuario en Twitch Chat
-         |
-         | (!task estudiar)
-         v
-    bot.ts (Cliente IRC)
-         |
-         | Parsea comando
-         v
-  commands/task.ts (Validación)
-         |
-         | Llama a servicio
-         v
-  services/taskService.ts
-         |
-         | CRUD en tasks.json
-         v
-    data/tasks.json
-         |
-         | Respuesta
-         v
-    Mensaje en chat
-```
-
-### Patrones de diseño aplicados
-
-| Patrón | Ubicación | Justificación |
-|--------|-----------|---------------|
-| **Command Pattern** | `src/commands/*` | Cada comando es un módulo independiente que implementa la misma interfaz (handler) |
-| **Service Layer** | `src/services/*` | Abstrae la lógica de negocio de la capa de presentación (comandos) |
-| **Singleton** | `src/utils/logger.ts` | Una única instancia del logger compartida en toda la aplicación |
-| **Repository Pattern** | `taskService.ts` (implícito) | Abstrae el acceso a datos (tasks.json) del resto de la aplicación |
-| **Factory Pattern** | `rateLimiter.ts` | Crea instancias de limitadores con diferentes configuraciones |
 
 ---
 
@@ -334,38 +395,35 @@ Usuario en Twitch Chat
 | Migración a TypeScript | 6-8 horas | Refactorización completa, configuración de tsconfig, tipado de interfaces |
 | Integración de Spotify | 10-12 horas | Implementación OAuth 2.0, manejo de refresh tokens, endpoints HTTP |
 | Overlay OBS con React | 12-15 horas | Setup de Vite, componentes React, WebSockets para actualización en tiempo real |
+| Refactoring a Monorepo | 8-10 horas | Reorganización en packages, Scope Rule, Screaming Architecture |
 | Testing y documentación | 5-6 horas | Pruebas unitarias con Jest, escritura de README |
-| **Total estimado** | **41-51 horas** | Proyecto desarrollado en ~2 semanas (part-time) |
+| **Total estimado** | **49-61 horas** | Proyecto desarrollado en ~3 semanas (part-time) |
 
 ### Complejidad de funcionalidades clave
 
 | Funcionalidad | Complejidad | Tiempo para nueva feature similar | Desafíos técnicos |
 |---------------|-------------|-------------------------------------|-------------------|
 | Añadir nuevo comando simple | Baja | 1-2 horas | Principalmente boilerplate, seguir patrón existente |
-| Modificar lógica de persistencia | Media | 4-6 horas | Requiere cambios en `taskService.ts` y manejo de migraciones de datos |
+| Modificar lógica de persistencia | Media | 4-6 horas | Requiere cambios en service y manejo de migraciones de datos |
 | Integrar nueva API externa | Alta | 8-12 horas | OAuth, manejo de errores de red, rate limits de la API externa |
 | Añadir base de datos real (PostgreSQL) | Alta | 16-20 horas | Diseño de esquema, ORM (Prisma), migraciones, testing con DB de prueba |
 
 ### Posibles retrasos y mitigaciones
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ RIESGOS IDENTIFICADOS                                            │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│ 1. Rate limits de Spotify API                                   │
-│    • Impacto: Overlay deja de actualizar                        │
-│    • Mitigación: Caché de 30 segundos, manejo de errores 429    │
-│                                                                  │
-│ 2. Corrupción de tasks.json en escrituras concurrentes          │
-│    • Impacto: Pérdida de datos de usuarios                      │
-│    • Mitigación: File locking (implementar en 3-4 horas)        │
-│                                                                  │
-│ 3. Cambio en API de Twitch IRC                                  │
-│    • Impacto: Bot deja de recibir mensajes                      │
-│    • Mitigación: Monitoreo de deprecation notices de tmi.js     │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+RIESGOS IDENTIFICADOS
+
+1. Rate limits de Spotify API
+   - Impacto: Overlay deja de actualizar
+   - Mitigación: Caché de 30 segundos, manejo de errores 429
+
+2. Corrupción de tasks.json en escrituras concurrentes
+   - Impacto: Pérdida de datos de usuarios
+   - Mitigación: File locking (implementar en 3-4 horas)
+
+3. Cambio en API de Twitch IRC
+   - Impacto: Bot deja de recibir mensajes
+   - Mitigación: Monitoreo de deprecation notices de tmi.js
 ```
 
 ---
@@ -477,7 +535,7 @@ describe('!task command integration', () => {
 
 **Problema actual:**
 
-Para cambiar límites como "máximo 5 tareas por usuario", hay que modificar `taskService.ts` y recompilar.
+Para cambiar límites como "máximo 5 tareas por usuario", hay que modificar el código y recompilar.
 
 **Solución:**
 
@@ -508,30 +566,21 @@ Archivo `config.json` con valores por defecto:
 ### Principios de código aplicados
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ CLEAN CODE                                                  │
-├─────────────────────────────────────────────────────────────┤
-│ • Funciones pequeñas (máximo 20 líneas)                     │
-│ • Nombres descriptivos (getUserTasks vs getData)            │
-│ • Evitar comentarios innecesarios (el código se explica)    │
-└─────────────────────────────────────────────────────────────┘
+CLEAN CODE
+- Funciones pequeñas (máximo 20 líneas)
+- Nombres descriptivos (getUserTasks vs getData)
+- Evitar comentarios innecesarios (el código se explica)
 
-┌─────────────────────────────────────────────────────────────┐
-│ SOLID PRINCIPLES                                            │
-├─────────────────────────────────────────────────────────────┤
-│ • Single Responsibility: Cada servicio hace una cosa        │
-│ • Open/Closed: Comandos extendibles sin modificar core      │
-│ • Dependency Inversion: Services inyectados, no importados  │
-└─────────────────────────────────────────────────────────────┘
+SOLID PRINCIPLES
+- Single Responsibility: Cada servicio hace una cosa
+- Open/Closed: Comandos extendibles sin modificar core
+- Dependency Inversion: Services inyectados, no importados
 
-┌─────────────────────────────────────────────────────────────┐
-│ ERROR HANDLING                                              │
-├─────────────────────────────────────────────────────────────┤
-│ • Try-catch en todas las operaciones I/O                    │
-│ • Errores específicos con mensajes claros                   │
-│ • Logging de errores con stack trace                        │
-│ • Graceful degradation (si Spotify falla, bot sigue activo) │
-└─────────────────────────────────────────────────────────────┘
+ERROR HANDLING
+- Try-catch en todas las operaciones I/O
+- Errores específicos con mensajes claros
+- Logging de errores con stack trace
+- Graceful degradation (si Spotify falla, bot sigue activo)
 ```
 
 ### Cómo añadir un nuevo comando
@@ -542,19 +591,19 @@ Archivo `config.json` con valores por defecto:
 
 ```bash
 # 1. Crear archivo del comando (10 min)
-touch src/commands/stats.ts
+touch packages/bot-backend/src/features/task-management/commands/stats.command.ts
 
 # 2. Implementar la lógica (45 min)
-# Ver ejemplo en src/commands/mytasks.ts
+# Ver ejemplo en packages/bot-backend/src/features/task-management/commands/mytasks.command.ts
 
 # 3. Exportar en index (5 min)
-# Añadir en src/commands/index.ts
+# Añadir en packages/bot-backend/src/features/task-management/commands/index.ts
 
 # 4. Registrar en el bot (10 min)
-# Añadir case en src/bot.ts
+# Añadir case en packages/bot-backend/app.ts
 
 # 5. Tests unitarios (20 min)
-# Crear src/commands/__tests__/stats.test.ts
+# Crear packages/bot-backend/src/features/task-management/commands/__tests__/stats.command.test.ts
 
 # 6. Documentación (10 min)
 # Actualizar README.md
@@ -563,10 +612,10 @@ touch src/commands/stats.ts
 **Plantilla de comando:**
 
 ```typescript
-// src/commands/stats.ts
+// packages/bot-backend/src/features/task-management/commands/stats.command.ts
 import { Client } from 'tmi.js';
-import { taskService } from '../services/taskService';
-import { logger } from '../utils/logger';
+import { taskManagementService } from '../task-management.service';
+import { logger } from '@infrastructure/logging';
 
 export async function handleStatsCommand(
   channel: string,
@@ -574,7 +623,7 @@ export async function handleStatsCommand(
   client: Client
 ): Promise<void> {
   try {
-    const stats = await taskService.getUserStats(user);
+    const stats = await taskManagementService.getUserStats(user);
     
     client.say(
       channel,
@@ -587,28 +636,6 @@ export async function handleStatsCommand(
     client.say(channel, `@${user}, hubo un error al obtener tus estadísticas.`);
   }
 }
-```
-
-### Scripts de desarrollo
-
-```bash
-# Desarrollo con auto-reload (backend + overlay)
-pnpm run dev:full
-
-# Solo backend
-pnpm run dev
-
-# Solo overlay OBS
-pnpm run dev:overlay
-
-# Tests
-pnpm test                  # Ejecutar una vez
-pnpm run test:watch        # Modo watch
-pnpm run test:coverage     # Con cobertura
-
-# Linting
-pnpm run lint              # Revisar
-pnpm run lint:fix          # Auto-arreglar
 ```
 
 ### Sistema de logging
@@ -628,12 +655,41 @@ El proyecto usa un logger centralizado con niveles de severidad:
 
 | Método | Ruta | Descripción | Respuesta |
 |--------|------|-------------|-----------|
-| `GET` | `/` | Estado general del bot | `{"status":"running","version":"1.0.0"}` |
-| `GET` | `/health` | Health check | `{"status":"ok","service":"twitch-bot"}` |
+| `GET` | `/health` | Health check | `{"status":"ok"}` |
 | `GET` | `/api/spotify/current-track` | Canción actual de Spotify | `{"name":"Song","artist":"Artist","isPlaying":true}` |
-| `GET` | `/api/tasks` | Todas las tareas (requiere auth) | `[{user, tasks, completed}]` |
+| `GET` | `/api/tasks` | Todas las tareas | `[{user, tasks, completed}]` |
 
 **Nota:** Los endpoints `/api/*` están protegidos con CORS configurado para permitir solo el origen del overlay.
+
+### Añadir una nueva feature en el overlay
+
+**Aplicando Scope Rule:**
+
+1. **Crear el directorio de la feature:**
+```bash
+mkdir -p packages/obs-overlay/src/features/viewer-count-display
+```
+
+2. **Crear el container (mismo nombre que la feature):**
+```typescript
+// packages/obs-overlay/src/features/viewer-count-display/viewer-count-display.tsx
+import React from 'react';
+
+export function ViewerCountDisplay() {
+  // Lógica y estado aquí
+  return <div>Viewers: {count}</div>;
+}
+```
+
+3. **Componentes locales si solo esta feature los usa:**
+```bash
+mkdir packages/obs-overlay/src/features/viewer-count-display/components
+```
+
+4. **Si 2+ features usan un componente, moverlo a shared:**
+```bash
+mv component packages/obs-overlay/src/shared/components/
+```
 
 ---
 
@@ -644,6 +700,8 @@ El proyecto usa un logger centralizado con niveles de severidad:
 - [tmi.js Documentation](https://github.com/tmijs/tmi.js) - Cliente IRC de Twitch
 - [Spotify Web API](https://developer.spotify.com/documentation/web-api) - Integración musical
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/) - Guía de TypeScript
+- [React 19 Documentation](https://react.dev/) - Framework del overlay
+- [pnpm Workspaces](https://pnpm.io/workspaces) - Gestión del monorepo
 
 ### Autor
 

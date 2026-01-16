@@ -1,0 +1,38 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"module": "esnext",
+		"lib": ["ES2020"],
+		"outDir": "./dist",
+		"rootDir": "./",
+		"removeComments": true,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"moduleResolution": "node",
+		"types": ["node", "jest"],
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "./",
+		"paths": {
+			"@features/*": ["src/features/*"],
+			"@shared/*": ["src/shared/*"],
+			"@infrastructure/*": ["src/infrastructure/*"]
+		}
+	},
+	"include": [
+		"src/**/*.ts",
+		"app.ts",
+		"scripts/**/*.ts"
+	],
+	"exclude": [
+		"node_modules",
+		"dist",
+		"obs-overlay",
+		"data"
+	]
+}
