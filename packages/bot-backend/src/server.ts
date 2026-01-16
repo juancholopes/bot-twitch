@@ -38,7 +38,7 @@ class WebServer {
 
 		this.app.use(
 			cors({
-				origin: (origin, callback) => {
+				origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
 					if (!origin) return callback(null, true);
 
 					if (config.env === 'development') {
@@ -100,7 +100,7 @@ class WebServer {
 	}
 
 	private setupSocket(): void {
-		this.io.on('connection', (socket) => {
+		this.io.on('connection', (socket: any) => {
 			logger.info('Client connected to WebSocket');
 			socket.on('disconnect', () => {
 				logger.info('Client disconnected from WebSocket');
