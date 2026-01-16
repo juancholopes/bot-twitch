@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { GlobalStyle } from '@shared/styles/global-styles';
 import StreamTaskDisplay from '@features/stream-task-display/stream-task-display';
 import NowPlayingDisplay from '@features/now-playing-display/now-playing-display';
+import PomodoroDisplay from '@features/pomodoro-display/pomodoro-display';
 
 const Container = styled.div`
   width: 1920px;
@@ -30,6 +31,7 @@ function App() {
       <Container>
         <StreamTaskDisplay />
         <NowPlayingDisplay />
+        <PomodoroDisplay />
       </Container>
     </>
   );
