@@ -66,7 +66,10 @@ class Application {
 }
 
 // Iniciar aplicación solo si este archivo es ejecutado directamente
-if (require.main === module) {
+import { fileURLToPath } from 'node:url';
+const isMain = import.meta.url === `file://${process.argv[1]}`;
+
+if (isMain) {
 	const app = new Application();
 	app.start();
 }

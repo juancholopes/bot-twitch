@@ -1,5 +1,6 @@
 import http from 'node:http';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import cors from 'cors';
 import express, {
 	type Application,
@@ -12,6 +13,10 @@ import config from '@infrastructure/config/environment';
 import logger from '@infrastructure/logging/logger';
 import { spotifyRoutes } from '@features/spotify-integration';
 import { taskManagementService } from '@features/task-management';
+
+// Define __dirname for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 class WebServer {
 	private app: Application;
@@ -95,7 +100,7 @@ class WebServer {
 		// Serve overlay static files
 		this.app.use(
 			'/overlay',
-			express.static(path.join(__dirname, '../obs-overlay/dist')),
+			express.static(path.join(__dirname, '../../obs-overlay/dist')),
 		);
 	}
 
