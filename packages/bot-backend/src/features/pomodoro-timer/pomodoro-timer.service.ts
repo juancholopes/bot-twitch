@@ -52,7 +52,7 @@ export class PomodoroTimerService extends EventEmitter {
    * Auto-start timer on service initialization
    */
   private startAutomatically(): void {
-    logger.info('🍅 Pomodoro Timer: Auto-starting with default configuration');
+    logger.info('Pomodoro Timer: Auto-starting with default configuration');
     this.start();
   }
 

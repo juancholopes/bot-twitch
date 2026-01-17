@@ -21,15 +21,13 @@ export function sanitizeTask(task: string, maxLength: number = 100): string {
 }
 
 /**
- * Validate if a user input is safe/valid
- * @param input
- * @returns true if valid
+ * Validate if a user input is safe/valid.
+ * Twitch already strips most dangerous chars; we still reject control chars to avoid overlay glitches.
  */
 export function isValidInput(input: string): boolean {
 	if (!input || typeof input !== 'string') return false;
-	// Example check: no control characters except newlines/tabs
-	// Although twitch chat probably handles this.
-	return true;
+	const hasControlChars = /[\x00-\x08\x0B\x0C\x0E-\x1F]/.test(input);
+	return !hasControlChars;
 }
 
 // For backward compatibility, also export as default object

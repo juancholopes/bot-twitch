@@ -14,7 +14,7 @@ class Application {
 
 	async start(): Promise<void> {
 		try {
-			logger.info("Iniciando aplicación...");
+			logger.info("Starting application...");
 
 			// Iniciar servidor web
 			await this.server.start();
@@ -22,23 +22,23 @@ class Application {
 			// Conectar bot de Twitch
 			await this.bot.connect();
 
-			logger.info("🟢🟢🟢 Aplicación iniciada correctamente 🛰️");
+			logger.info("Application started successfully.");
 		} catch (error) {
-			logger.error("Error iniciando la aplicación:", error);
+			logger.error("Failed to start application:", error);
 			process.exit(1);
 		}
 	}
 
 	async stop(): Promise<void> {
 		try {
-			logger.info("Deteniendo aplicación...");
+			logger.info("Stopping application...");
 
 			await this.bot.disconnect();
 			await this.server.stop();
 
-			logger.info("Aplicación detenida correctamente");
+			logger.info("Application stopped cleanly.");
 		} catch (error) {
-			logger.error("Error deteniendo la aplicación:", error);
+			logger.error("Failed to stop application:", error);
 		}
 	}
 
@@ -47,19 +47,19 @@ class Application {
 
 		signals.forEach((signal) => {
 			process.on(signal, async () => {
-				logger.info(`Señal ${signal} recibida, cerrando aplicación...`);
+				logger.info(`${signal} received, shutting down gracefully...`);
 				await this.stop();
 				process.exit(0);
 			});
 		});
 
 		process.on("uncaughtException", (error) => {
-			logger.error("Excepción no capturada:", error);
+			logger.error("Uncaught exception:", error);
 			process.exit(1);
 		});
 
 		process.on("unhandledRejection", (reason, promise) => {
-			logger.error("Promesa rechazada no manejada:", { reason, promise });
+			logger.error("Unhandled promise rejection:", { reason, promise });
 			process.exit(1);
 		});
 	}

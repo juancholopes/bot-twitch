@@ -23,7 +23,7 @@ class TwitchBot {
 
 	private setupEventHandlers(): void {
 		this.client.on('connected', (address: string, port: number) => {
-			logger.info(`Bot conectado a ${address}:${port}`);
+			logger.info(`Bot connected to ${address}:${port}`);
 		});
 
 		this.client.on('message', this.handleMessage.bind(this));
@@ -132,9 +132,9 @@ class TwitchBot {
 	async connect(): Promise<void> {
 		try {
 			await this.client.connect();
-			logger.info('Bot de Twitch iniciado correctamente');
+			logger.info('Twitch bot started successfully.');
 		} catch (error) {
-			logger.error('Error conectando el bot:', error);
+			logger.error('Failed to connect the bot:', error);
 			throw error;
 		}
 	}
@@ -142,9 +142,9 @@ class TwitchBot {
 	async disconnect(): Promise<void> {
 		try {
 			await this.client.disconnect();
-			logger.info('Bot desconectado');
+			logger.info('Bot disconnected.');
 		} catch (error) {
-			logger.error('Error desconectando el bot:', error);
+			logger.error('Failed to disconnect the bot:', error);
 		}
 	}
 }

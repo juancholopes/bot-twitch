@@ -4,7 +4,6 @@ import spotifyIntegrationService from './spotify-integration.service';
 
 const router: Router = express.Router();
 
-// Login route
 router.get('/api/spotify/login', (_req: Request, res: Response) => {
 	const authUrl = spotifyIntegrationService.getAuthorizationUrl();
 	res.redirect(authUrl);
@@ -40,7 +39,6 @@ router.get('/callback', async (req: Request, res: Response) => {
 	}
 });
 
-// Player state route
 router.get('/api/spotify/player', async (_req: Request, res: Response) => {
 	try {
 		const playerState = await spotifyIntegrationService.getPlayerState();

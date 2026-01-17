@@ -9,7 +9,7 @@ interface RateLimiterOptions {
 class RateLimiter {
 	private maxRequests: number;
 	private windowMs: number;
-	private requests: Map<string, number[]>; // Map<username, timestamps[]>
+	private requests: Map<string, number[]>;
 
 	constructor(options: RateLimiterOptions = {}) {
 		this.maxRequests = options.maxRequests || 5;

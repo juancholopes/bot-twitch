@@ -102,21 +102,21 @@ class WebServer {
 		);
 		this.app.use('/api/pomodoro', pomodoroRoutes);
 
-		this.app.get('/', (_req: Request, res: Response) => {
-			res.json({
-				message: 'Bot de Twitch funcionando correctamente',
-				timestamp: new Date().toISOString(),
-				status: 'online',
+			this.app.get('/', (_req: Request, res: Response) => {
+				res.json({
+					message: 'Twitch bot is running',
+					timestamp: new Date().toISOString(),
+					status: 'online',
+				});
 			});
-		});
 
-		this.app.get('/health', (_req: Request, res: Response) => {
-			res.json({
-				status: 'healthy',
-				uptime: process.uptime(),
-				timestamp: new Date().toISOString(),
+			this.app.get('/health', (_req: Request, res: Response) => {
+				res.json({
+					status: 'healthy',
+					uptime: process.uptime(),
+					timestamp: new Date().toISOString(),
+				});
 			});
-		});
 
 		this.app.get('/api/tasks', async (_req: Request, res: Response) => {
 			const tasksPath = path.join(__dirname, '../data/tasks.json');
@@ -189,12 +189,12 @@ class WebServer {
 			try {
 				this.server.listen(this.port, () => {
 					logger.info(
-						`Servidor web iniciado en http://localhost:${this.port}`,
+						`Web server listening at http://localhost:${this.port}`,
 					);
 					resolve();
 				});
 			} catch (error) {
-				logger.error('Error iniciando servidor web:', error);
+				logger.error('Failed to start web server:', error);
 				reject(error);
 			}
 		});
@@ -207,7 +207,7 @@ class WebServer {
 			
 			if (this.server) {
 				this.server.close(() => {
-					logger.info('Servidor web detenido');
+					logger.info('Web server stopped.');
 					resolve();
 				});
 			} else {
