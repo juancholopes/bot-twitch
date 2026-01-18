@@ -1,13 +1,8 @@
 import React from 'react';
-import styled from 'styled-components';
 import type { TimerPhase } from '@bot-twitch/shared';
 
 interface PhaseIndicatorProps {
   phase: TimerPhase;
-}
-
-interface IndicatorContainerProps {
-  $phase: TimerPhase;
 }
 
 const getPhaseColor = (phase: TimerPhase): string => {
@@ -32,31 +27,23 @@ const getPhaseLabel = (phase: TimerPhase): string => {
   }
 };
 
-const IndicatorContainer = styled.div<IndicatorContainerProps>`
-  background: ${props => getPhaseColor(props.$phase)};
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #ffffff;
-  text-align: center;
-  box-shadow: 
-    0 4px 20px rgba(0, 0, 0, 0.4),
-    0 0 40px ${props => getPhaseColor(props.$phase)}40;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
-`;
-
 /**
  * PhaseIndicator Component
  * Shows current pomodoro phase with color coding
  * Scope Rule: Local to pomodoro-display feature (only this feature uses it)
  */
 export const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({ phase }) => {
+  const phaseColor = getPhaseColor(phase);
+
   return (
-    <IndicatorContainer $phase={phase}>
+    <div
+      className="mb-4 rounded-xl px-8 py-4 text-center text-[28px] font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300"
+      style={{
+        backgroundColor: phaseColor,
+        boxShadow: `0 4px 20px rgba(0, 0, 0, 0.4), 0 0 40px ${phaseColor}40`,
+      }}
+    >
       {getPhaseLabel(phase)}
-    </IndicatorContainer>
+    </div>
   );
 };

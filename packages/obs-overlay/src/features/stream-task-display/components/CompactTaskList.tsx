@@ -1,89 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
-import styled, { keyframes } from 'styled-components';
 import AnimatedTaskItem from './AnimatedTaskItem';
 import type { UserTasks, Task } from '@bot-twitch/shared/task';
 
 // Maximum number of tasks that fit in viewport before enabling infinite scroll
 const MAX_VISIBLE_TASKS = 10;
-
-const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
-const Container = styled.div`
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 320px;
-  height: 400px;
-  z-index: 1000;
-  animation: ${slideIn} 0.5s ease-out;
-  pointer-events: none;
-`;
-
-const BlurredBackground = styled.div`
-  position: absolute;
-  top: 0px;
-  left: -12px;
-  right: -12px;
-  bottom: 0px;
-  background: rgba(15, 15, 20, 0.85);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-  z-index: 1;
-`;
-
-const Header = styled.div`
-  position: relative;
-  z-index: 2;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  pointer-events: none;
-`;
-
-const Title = styled.h2`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 500;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-`;
-
-const TaskCount = styled.span`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 400;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-left: 8px;
-  pointer-events: none;
-`;
-
-const ScrollContainer = styled.div`
-  position: relative;
-  z-index: 3;
-  height: calc(100% - 60px);
-  overflow: hidden;
-  pointer-events: none;
-  border-radius: 0 0 12px 12px;
-`;
-
-const TaskList = styled.div`
-  padding: 8px 0;
-`;
 
 interface CompactTaskListProps {
   tasks?: UserTasks[];
@@ -194,44 +114,50 @@ const CompactTaskList: React.FC<CompactTaskListProps> = ({
 
   if (loading) {
     return (
-      <Container>
-        <BlurredBackground />
-        <Header>
-          <Title>Loading tasks...</Title>
-        </Header>
-      </Container>
+      <div className="pointer-events-none fixed bottom-5 right-5 h-[400px] w-[320px] animate-slideIn z-[1000]">
+        <div className="pointer-events-none absolute inset-0 -left-3 -right-3 rounded-xl border border-white/20 bg-[rgba(15,15,20,0.85)] backdrop-blur-[16px] saturate-[180%] shadow-[0_8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)]" />
+        <div className="relative z-10 border-b border-white/20 px-5 pb-3 pt-4">
+          <h2 className="m-0 text-[16px] font-medium text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Loading tasks...</h2>
+        </div>
+      </div>
     );
   }
 
   if (!displayTasks.length) {
     return (
-      <Container>
-        <BlurredBackground />
-        <Header>
-          <Title>No tasks yet</Title>
-          <TaskCount>Use !task to add tasks</TaskCount>
-        </Header>
-      </Container>
+      <div className="pointer-events-none fixed bottom-5 right-5 h-[400px] w-[320px] animate-slideIn z-[1000]">
+        <div className="pointer-events-none absolute inset-0 -left-3 -right-3 rounded-xl border border-white/20 bg-[rgba(15,15,20,0.85)] backdrop-blur-[16px] saturate-[180%] shadow-[0_8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)]" />
+        <div className="relative z-10 border-b border-white/20 px-5 pb-3 pt-4">
+          <h2 className="m-0 text-[16px] font-medium text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+            No tasks yet
+            <span className="ml-2 text-[12px] font-normal text-white/70">Use !task to add tasks</span>
+          </h2>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <BlurredBackground />
-      <Header>
-        <Title>
+    <div className="pointer-events-none fixed bottom-5 right-5 h-[400px] w-[320px] animate-slideIn z-[1000]">
+      <div className="pointer-events-none absolute inset-0 -left-3 -right-3 rounded-xl border border-white/20 bg-[rgba(15,15,20,0.85)] backdrop-blur-[16px] saturate-[180%] shadow-[0_8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.1)]" />
+      <div className="relative z-10 border-b border-white/20 px-5 pb-3 pt-4">
+        <h2 className="m-0 text-[16px] font-medium text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
           Task List
-          <TaskCount>({totalTasks} tasks)</TaskCount>
-        </Title>
-      </Header>
-      <ScrollContainer ref={scrollContainerRef}>
-        <TaskList>
+          <span className="ml-2 text-[12px] font-normal text-white/70">({totalTasks} tasks)</span>
+        </h2>
+      </div>
+      <div
+        ref={scrollContainerRef}
+        className="relative z-10 overflow-hidden rounded-b-xl"
+        style={{ height: 'calc(100% - 60px)' }}
+      >
+        <div className="py-2">
           {displayTasks.map((task, index) => (
             <AnimatedTaskItem key={task.id} task={task} index={index} />
           ))}
-        </TaskList>
-      </ScrollContainer>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 

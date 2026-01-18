@@ -13,16 +13,7 @@ const StreamTaskDisplay: React.FC = () => {
   return (
     <>
       {error && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          background: 'rgba(239, 68, 68, 0.9)',
-          color: 'white',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          zIndex: 2000,
-        }}>
+        <div className="fixed right-5 top-5 z-[2000] rounded-lg bg-[rgba(239,68,68,0.9)] px-4 py-3 text-white">
           {error}
         </div>
       )}
