@@ -14,11 +14,10 @@ const MOCK_TRACK: SpotifyTrack = {
   id: 'mock-track-1',
   name: 'LUNA',
   artists: [
-    { id: '1', name: 'Feid' },
-    { id: '2', name: 'ATL Jacob' }
+    { name: 'Feid' },
+    { name: 'ATL Jacob' }
   ],
   album: {
-    id: 'mock-album-1',
     name: 'FERXXOCALIPSIS',
     images: [
       { 
