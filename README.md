@@ -5,6 +5,7 @@
 - [Problema que Resuelve](#problema-que-resuelve)
 - [Descripción General](#descripción-general)
 - [Arquitectura](#arquitectura)
+- [Diseño UI/UX](#diseño)
 - [Decisiones Técnicas](#decisiones-técnicas)
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Comandos Disponibles](#comandos-disponibles)
@@ -16,7 +17,7 @@
 
 ## Problema que Resuelve
 
-Durante las transmisiones en vivo en Twitch, tanto streamers como espectadores suelen mencionar tareas o recordatorios que quieren cumplir, pero frecuentemente se olvidan de ellas porque no hay un sistema centralizado y accesible para gestionarlas en tiempo real dentro del chat.
+En los últimos años se ha vuelto mas común el trabajo en casa y también siempre que seamos estudiantes tenemos a dedicar unas horas de enfoque en resolver informes y proyectos de grado, y esto ha llevado a pasar largas jornadas dentro de una pantalla, sería muy común sentirse solo pero poco a poco en plataformas de streaming como Twitch (siendo una de las mas famosas) suelen crearse comunidades pequeñas de Coworking y Study With Me, las cuales buscan atraer a personas y tener algo en común que hacer mientras cumplimos nuestras obligaciones, este bot permite que el streamer brinde a sus viwers una forma minimalista y cheveré de sentirse parte de estas sesiones ya que centraliza todas las tareas que tienen pendientes los viwers y que quieren completar. 
 
 **Solución implementada:**
 
@@ -201,6 +202,13 @@ pnpm run lint
 ```
 
 ---
+# Diseño 
+
+Se opto por un diseño minimalista que permita a los usuarios enfocarse en sesiones de estudio y de trabajo
+
+Se puede ver el diseño implementado en figma a través del siguiente link: 
+
+[OBS Studio Overlay Dising](https://www.figma.com/design/5ZxVxwmZhPvDPDbNhde79F/OBS-Studio-Overlay?node-id=0-1&p=f&t=tStVgpsIilqsmaTt-0)
 
 ## Decisiones Técnicas
 
