@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import type { Task } from '@bot-twitch/shared/task';
+
 interface AnimatedTaskItemProps {
   task: Task;
   index: number;
