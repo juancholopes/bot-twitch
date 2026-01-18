@@ -1,65 +1,5 @@
-import styled from 'styled-components';
 import SpotifyIcon from './SpotifyIcon';
 import type { SpotifyTrack } from '@bot-twitch/shared/spotify';
-
-const Widget = styled.div<{ visible: boolean }>`
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  background-color: rgba(30, 215, 96, 0.95);
-  padding: 10px 15px;
-  border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  max-width: 350px;
-  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-  transform: translateX(${props => props.visible ? '0' : '-150%'});
-  opacity: ${props => props.visible ? '1' : '0'};
-  z-index: 1000;
-  pointer-events: auto;
-
-  .spotify-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 12px;
-    flex-shrink: 0;
-  }
-`;
-
-const AlbumArt = styled.img`
-  width: 40px;
-  height: 40px;
-  border-radius: 4px;
-  margin-right: 12px;
-  object-fit: cover;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-`;
-
-const Info = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-  white-space: nowrap;
-`;
-
-const TrackName = styled.span`
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 2px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-`;
-
-const ArtistName = styled.span`
-  font-size: 11px;
-  opacity: 0.9;
-  text-overflow: ellipsis;
-  overflow: hidden;
-`;
 
 interface SpotifyWidgetProps {
   currentTrack: SpotifyTrack | null;
@@ -74,15 +14,27 @@ const SpotifyWidget: React.FC<SpotifyWidgetProps> = ({ currentTrack, isPlaying }
     ? currentTrack.album.images[0].url 
     : null;
 
+  const visibility = isPlaying
+    ? 'translate-x-0 opacity-100'
+    : '-translate-x-[150%] opacity-0';
+
   return (
-    <Widget visible={isPlaying}>
-      <SpotifyIcon />
-      {albumArt && <AlbumArt src={albumArt} alt="Album Art" />}
-      <Info>
-        <TrackName>{currentTrack.name}</TrackName>
-        <ArtistName>{artistNames}</ArtistName>
-      </Info>
-    </Widget>
+    <div
+      className={`pointer-events-auto fixed bottom-5 left-5 z-[1000] flex max-w-[350px] items-center rounded-full bg-[rgba(30,215,96,0.95)] px-4 py-2.5 text-white shadow-[0_4px_15px_rgba(0,0,0,0.3)] transition-all duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)] ${visibility}`}
+    >
+      <SpotifyIcon className="mr-3 h-6 w-6 shrink-0" />
+      {albumArt && (
+        <img
+          src={albumArt}
+          alt="Album Art"
+          className="mr-3 h-10 w-10 rounded-[4px] object-cover shadow-[0_2px_5px_rgba(0,0,0,0.2)]"
+        />
+      )}
+      <div className="flex min-w-0 flex-col justify-center whitespace-nowrap">
+        <span className="truncate text-[14px] font-bold leading-tight">{currentTrack.name}</span>
+        <span className="truncate text-[11px] opacity-90">{artistNames}</span>
+      </div>
+    </div>
   );
 };
 

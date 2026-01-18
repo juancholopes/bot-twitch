@@ -1,49 +1,7 @@
-import React from 'react';
-import styled from 'styled-components';
 import { usePomodoro } from './hooks/use-pomodoro';
 import { TimerClock } from './components/TimerClock';
 import { PhaseIndicator } from './components/PhaseIndicator';
 import { SessionCounter } from './components/SessionCounter';
-
-const Container = styled.div`
-  position: fixed;
-  top: 50px;
-  right: 50px;
-  background: rgba(15, 23, 42, 0.95);
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 
-    0 10px 50px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  min-width: 350px;
-  pointer-events: none;
-`;
-
-const Content = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-`;
-
-const LoadingMessage = styled.div`
-  color: #64748b;
-  font-size: 18px;
-  text-align: center;
-`;
-
-const ConnectionStatus = styled.div<{ $isConnected: boolean }>`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: ${props => props.$isConnected ? '#10b981' : '#ef4444'};
-  box-shadow: 0 0 10px ${props => props.$isConnected ? '#10b98180' : '#ef444480'};
-`;
 
 /**
  * PomodoroDisplay Component
@@ -55,25 +13,31 @@ const ConnectionStatus = styled.div<{ $isConnected: boolean }>`
 const PomodoroDisplay: React.FC = () => {
   const { state, isConnected } = usePomodoro();
 
+  const connectionColor = isConnected ? '#10b981' : '#ef4444';
+  const connectionGlow = isConnected ? '#10b98180' : '#ef444480';
+
   if (!state) {
     return (
-      <Container>
-        <Content>
-          <LoadingMessage>Cargando timer...</LoadingMessage>
-        </Content>
-      </Container>
+      <div className="pointer-events-none fixed right-[50px] top-[50px] min-w-[350px] rounded-2xl border-2 border-white/10 bg-[rgba(15,23,42,0.95)] p-8 shadow-[0_10px_50px_rgba(0,0,0,0.5),0_0_100px_rgba(0,0,0,0.3)] backdrop-blur-[10px]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="text-center text-[18px] text-slate-400">Cargando timer...</div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <ConnectionStatus $isConnected={isConnected} />
-      <Content>
+    <div className="pointer-events-none fixed right-[50px] top-[50px] min-w-[350px] rounded-2xl border-2 border-white/10 bg-[rgba(15,23,42,0.95)] p-8 shadow-[0_10px_50px_rgba(0,0,0,0.5),0_0_100px_rgba(0,0,0,0.3)] backdrop-blur-[10px]">
+      <div
+        className="absolute right-3 top-3 h-3 w-3 rounded-full"
+        style={{ backgroundColor: connectionColor, boxShadow: `0 0 10px ${connectionGlow}` }}
+      />
+      <div className="flex flex-col items-center gap-6">
         <PhaseIndicator phase={state.phase} />
         <TimerClock remainingSeconds={state.remainingSeconds} />
         <SessionCounter count={state.sessionCount} totalToday={state.totalSessionsToday} />
-      </Content>
-    </Container>
+      </div>
+    </div>
   );
 };
 

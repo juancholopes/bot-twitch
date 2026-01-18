@@ -1,21 +1,8 @@
 import React from 'react';
-import styled from 'styled-components';
 
 interface TimerClockProps {
   remainingSeconds: number;
 }
-
-const ClockContainer = styled.div`
-  font-size: 72px;
-  font-weight: 700;
-  font-family: 'Courier New', monospace;
-  color: #ffffff;
-  text-shadow: 
-    0 0 20px rgba(255, 255, 255, 0.5),
-    0 0 40px rgba(255, 255, 255, 0.3);
-  letter-spacing: 4px;
-  text-align: center;
-`;
 
 const formatTime = (totalSeconds: number): string => {
   const minutes = Math.floor(totalSeconds / 60);
@@ -30,8 +17,8 @@ const formatTime = (totalSeconds: number): string => {
  */
 export const TimerClock: React.FC<TimerClockProps> = ({ remainingSeconds }) => {
   return (
-    <ClockContainer>
+    <div className="text-center text-[72px] font-bold font-mono tracking-[4px] text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
       {formatTime(remainingSeconds)}
-    </ClockContainer>
+    </div>
   );
 };

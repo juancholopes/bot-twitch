@@ -1,141 +1,3 @@
-import { useState, useEffect } from 'react';
-import styled, { keyframes, css } from 'styled-components';
-import type { Task } from '@bot-twitch/shared/task';
-
-const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-`;
-
-const completionPulse = keyframes`
-  0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
-`;
-
-interface ItemContainerProps {
-  completed: boolean;
-}
-
-const ItemContainer = styled.div<ItemContainerProps>`
-  padding: 8px 16px;
-  margin: 2px 0;
-  border-radius: 8px;
-  animation: ${fadeIn} 0.4s ease-out;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: ${props => props.completed ? '#22c55e' : '#3b82f6'};
-    transform: scaleY(1);
-  }
-`;
-
-const TaskContent = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-`;
-
-interface TaskTextProps {
-  completed: boolean;
-}
-
-const TaskText = styled.span<TaskTextProps>`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 500;
-  font-size: 14px;
-  color: ${props => props.completed ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.95)'};
-  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
-  text-decoration-color: #22c55e;
-  text-decoration-thickness: 2px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  flex: 1;
-  line-height: 1.4;
-  pointer-events: none;
-
-  ${props => props.completed && css`
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 100%;
-      height: 2px;
-      background: #22c55e;
-      transform: scaleX(0);
-      transform-origin: left;
-      animation: ${keyframes`
-        to {
-          transform: scaleX(1);
-        }
-      `} 0.5s ease-out 0.2s forwards;
-    }
-  `}
-`;
-
-interface UserBadgeProps {
-  completed: boolean;
-}
-
-const UserBadge = styled.span<UserBadgeProps>`
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-weight: 400;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  pointer-events: none;
-
-  ${props => props.completed && css`
-    background: rgba(34, 197, 94, 0.2);
-    color: rgba(34, 197, 94, 0.9);
-    border-color: rgba(34, 197, 94, 0.3);
-  `}
-`;
-
-interface StatusIndicatorProps {
-  completed: boolean;
-}
-
-const StatusIndicator = styled.div<StatusIndicatorProps>`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: ${props => props.completed ? '#22c55e' : '#3b82f6'};
-  box-shadow: 0 0 0 0 ${props => props.completed ? 'rgba(34, 197, 94, 0.4)' : 'rgba(59, 130, 246, 0.4)'};
-
-  ${props => props.completed && css`
-    animation: ${completionPulse} 2s infinite;
-  `}
-`;
-
 interface AnimatedTaskItemProps {
   task: Task;
   index: number;
@@ -156,18 +18,37 @@ const AnimatedTaskItem: React.FC<AnimatedTaskItemProps> = ({ task, index }) => {
     return null;
   }
 
+  const leftBarColor = task.completed ? '#22c55e' : '#3b82f6';
+  const textClasses = task.completed
+    ? 'text-white/80 line-through decoration-green-500 decoration-2'
+    : 'text-white/95';
+  const badgeClasses = task.completed
+    ? 'border-green-500/30 bg-green-500/20 text-green-500/90'
+    : 'border-white/10 bg-white/10 text-white/60';
+  const statusClasses = task.completed
+    ? 'bg-green-500 animate-completionPulse'
+    : 'bg-blue-500';
+
   return (
-    <ItemContainer completed={task.completed}>
-      <TaskContent>
-        <StatusIndicator completed={task.completed} />
-        <TaskText completed={task.completed}>
+    <div className="relative my-[2px] overflow-hidden rounded-lg px-4 py-2 animate-fadeIn">
+      <span
+        className="absolute left-0 top-0 h-full w-[3px]"
+        style={{ backgroundColor: leftBarColor }}
+      />
+      <div className="flex items-center justify-between gap-3">
+        <div className={`h-2 w-2 rounded-full ${statusClasses}`} />
+        <span
+          className={`pointer-events-none flex-1 text-[14px] font-medium leading-[1.4] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] ${textClasses}`}
+        >
           {task.text}
-        </TaskText>
-        <UserBadge completed={task.completed}>
+        </span>
+        <span
+          className={`pointer-events-none rounded border px-1.5 py-0.5 text-[11px] uppercase tracking-[0.5px] backdrop-blur-sm ${badgeClasses}`}
+        >
           {task.username}
-        </UserBadge>
-      </TaskContent>
-    </ItemContainer>
+        </span>
+      </div>
+    </div>
   );
 };
 

@@ -1,39 +1,9 @@
 import React from 'react';
-import styled from 'styled-components';
 
 interface SessionCounterProps {
   count: number;
   totalToday: number;
 }
-
-const CounterContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-`;
-
-const CountLabel = styled.div`
-  font-size: 18px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 600;
-`;
-
-const CountValue = styled.div`
-  font-size: 48px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-`;
-
-const TodayTotal = styled.div`
-  font-size: 16px;
-  color: #64748b;
-  margin-top: 4px;
-`;
 
 /**
  * SessionCounter Component
@@ -42,10 +12,10 @@ const TodayTotal = styled.div`
  */
 export const SessionCounter: React.FC<SessionCounterProps> = ({ count, totalToday }) => {
   return (
-    <CounterContainer>
-      <CountLabel>Sesiones Completadas</CountLabel>
-      <CountValue>{count}</CountValue>
-      <TodayTotal>Total hoy: {totalToday}</TodayTotal>
-    </CounterContainer>
+    <div className="mt-4 flex flex-col items-center gap-2">
+      <div className="text-[18px] font-semibold uppercase tracking-[2px] text-slate-400">Sesiones Completadas</div>
+      <div className="text-[48px] font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">{count}</div>
+      <div className="mt-1 text-[16px] text-slate-500">Total hoy: {totalToday}</div>
+    </div>
   );
 };
