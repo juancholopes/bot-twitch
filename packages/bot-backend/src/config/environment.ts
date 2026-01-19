@@ -24,6 +24,16 @@ const requiredEnvVars: EnvVar[] = [
 		type: 'string',
 		description: 'Twitch Client Secret',
 	},
+	{
+		name: 'SUPABASE_URL',
+		type: 'string',
+		description: 'Supabase Project URL',
+	},
+	{
+		name: 'SUPABASE_SERVICE_ROLE_KEY',
+		type: 'string',
+		description: 'Supabase Service Role Key (backend only)',
+	},
 ];
 
 const _optionalEnvVars: EnvVar[] = [
@@ -176,6 +186,10 @@ interface Config {
 		redirectUri: string;
 		refreshToken?: string;
 	};
+	supabase: {
+		url: string;
+		serviceRoleKey: string;
+	};
 }
 
 const config: Config = {
@@ -221,6 +235,10 @@ const config: Config = {
 			process.env.SPOTIFY_REDIRECT_URI ||
 			'http://localhost:3000/callback',
 		refreshToken: process.env.SPOTIFY_REFRESH_TOKEN,
+	},
+	supabase: {
+		url: process.env.SUPABASE_URL!,
+		serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
 	},
 };
 
