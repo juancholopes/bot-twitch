@@ -1,15 +1,19 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { supabase } from '@infrastructure/database';
 import type { PomodoroConfig } from '@bot-twitch/shared';
 import logger from '../../utils/logger';
 
 /**
- * PomodoroConfigService
- * Handles loading and saving pomodoro configuration
- * Scope Rule: Local to pomodoro-timer feature (only this feature uses it)
+ * PomodoroConfigService - Migrated to Supabase
+ * 
+ * Mantiene la misma interfaz pública que la versión JSON
+ * Scope Rule: Local a pomodoro-timer feature
+ * 
+ * CAMBIOS PRINCIPALES:
+ * - Reemplaza fs operations por queries Supabase
+ * - Usa tabla singleton (id = 1 siempre)
+ * - Cache en memoria para reducir queries
  */
 export class PomodoroConfigService {
-  private readonly configPath: string;
   private readonly defaultConfig: PomodoroConfig = {
     workDuration: 80,
     shortBreakDuration: 10,
@@ -17,58 +21,129 @@ export class PomodoroConfigService {
     sessionsBeforeLongBreak: 5,
   };
 
-  constructor(dataDir = './data') {
-    this.configPath = path.join(dataDir, 'pomodoro-config.json');
-    this.ensureDataDirectory(dataDir);
+  private configCache: PomodoroConfig | null = null;
+  private cacheExpiry: number = 0;
+  private readonly CACHE_TTL_MS = 60000; // 1 minuto (config cambia poco)
+
+  /**
+   * Cache helper to centralize TTL updates
+   */
+  private cacheConfig(config: PomodoroConfig): void {
+    this.configCache = config;
+    this.cacheExpiry = Date.now() + this.CACHE_TTL_MS;
   }
 
   /**
-   * Ensure data directory exists
+   * Check if cache is valid
    */
-  private ensureDataDirectory(dataDir: string): void {
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-      logger.info(`Created data directory: ${dataDir}`);
+  private isCacheValid(): boolean {
+    return this.configCache !== null && Date.now() < this.cacheExpiry;
+  }
+
+  /**
+   * Invalidate cache
+   */
+  private invalidateCache(): void {
+    this.configCache = null;
+    this.cacheExpiry = 0;
+  }
+
+  /**
+   * Load configuration from Supabase or return defaults
+   */
+  async load(): Promise<PomodoroConfig> {
+    // Check cache first
+    if (this.isCacheValid()) {
+      return this.configCache!;
     }
-  }
 
-  /**
-   * Load configuration from file or return defaults
-   */
-  load(): PomodoroConfig {
     try {
-      if (!fs.existsSync(this.configPath)) {
-        logger.info('Pomodoro config not found, creating with defaults');
-        this.save(this.defaultConfig);
+      // Fetch from DB (singleton with id = 1)
+      const { data, error } = await supabase
+        .from('pomodoro_config')
+        .select('*')
+        .eq('id', 1)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No rows found
+          logger.info('Pomodoro config not found, creating with defaults');
+          await this.save(this.defaultConfig);
+          this.cacheConfig(this.defaultConfig);
+          return this.defaultConfig;
+        }
+        logger.error('Error loading pomodoro config:', error);
         return this.defaultConfig;
       }
 
-      const data = fs.readFileSync(this.configPath, 'utf-8');
-      const config = JSON.parse(data) as PomodoroConfig;
-      
-      // Validate configuration
+      const config: PomodoroConfig = {
+        workDuration: data.work_duration,
+        shortBreakDuration: data.short_break_duration,
+        longBreakDuration: data.long_break_duration,
+        sessionsBeforeLongBreak: data.sessions_before_long_break,
+      };
+
+      // Validate and cache
       this.validateConfig(config);
-      
+      this.cacheConfig(config);
+
       logger.info('Pomodoro configuration loaded successfully');
       return config;
     } catch (error) {
       logger.error('Error loading pomodoro config, using defaults:', error);
+      this.cacheConfig(this.defaultConfig);
       return this.defaultConfig;
     }
   }
 
   /**
-   * Save configuration to file
+   * Save configuration to Supabase
    */
-  save(config: PomodoroConfig): void {
+  async save(config: PomodoroConfig): Promise<void> {
     try {
       this.validateConfig(config);
-      fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf-8');
+
+      // Upsert (insert or update) with id = 1 (singleton)
+      const { error } = await supabase
+        .from('pomodoro_config')
+        .upsert({
+          id: 1,
+          work_duration: config.workDuration,
+          short_break_duration: config.shortBreakDuration,
+          long_break_duration: config.longBreakDuration,
+          sessions_before_long_break: config.sessionsBeforeLongBreak,
+        }, {
+          onConflict: 'id',
+        });
+
+      if (error) {
+        logger.error('Error saving pomodoro config:', error);
+        throw error;
+      }
+
+      // Update cache with saved config
+      this.cacheConfig(config);
+
       logger.info('Pomodoro configuration saved successfully');
     } catch (error) {
       logger.error('Error saving pomodoro config:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get cached configuration (falls back to defaults if not loaded yet)
+   */
+  getConfig(): PomodoroConfig {
+    return this.configCache ?? this.defaultConfig;
+  }
+
+  /**
+   * Reset configuration to defaults
+   */
+  async resetToDefaults(): Promise<void> {
+    await this.save(this.defaultConfig);
+    logger.info('Pomodoro configuration reset to defaults');
   }
 
   /**
@@ -92,51 +167,44 @@ export class PomodoroConfigService {
   /**
    * Update work duration
    */
-  setWorkDuration(minutes: number): void {
-    const config = this.load();
+  async setWorkDuration(minutes: number): Promise<void> {
+    const config = await this.load();
     config.workDuration = minutes;
-    this.save(config);
+    await this.save(config);
   }
 
   /**
    * Update short break duration
    */
-  setShortBreakDuration(minutes: number): void {
-    const config = this.load();
+  async setShortBreakDuration(minutes: number): Promise<void> {
+    const config = await this.load();
     config.shortBreakDuration = minutes;
-    this.save(config);
+    await this.save(config);
   }
 
   /**
    * Update long break duration
    */
-  setLongBreakDuration(minutes: number): void {
-    const config = this.load();
+  async setLongBreakDuration(minutes: number): Promise<void> {
+    const config = await this.load();
     config.longBreakDuration = minutes;
-    this.save(config);
+    await this.save(config);
   }
 
   /**
    * Update sessions before long break
    */
-  setSessionsBeforeLongBreak(count: number): void {
-    const config = this.load();
-    config.sessionsBeforeLongBreak = count;
-    this.save(config);
+  async setSessionsBeforeLongBreak(sessions: number): Promise<void> {
+    const config = await this.load();
+    config.sessionsBeforeLongBreak = sessions;
+    await this.save(config);
   }
 
   /**
    * Reset to default configuration
    */
-  resetToDefaults(): void {
-    this.save(this.defaultConfig);
+  async reset(): Promise<void> {
+    await this.save(this.defaultConfig);
     logger.info('Pomodoro configuration reset to defaults');
-  }
-
-  /**
-   * Get current configuration
-   */
-  getConfig(): PomodoroConfig {
-    return this.load();
   }
 }

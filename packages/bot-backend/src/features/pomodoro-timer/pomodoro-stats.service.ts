@@ -1,65 +1,24 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { supabase, type Database } from '@infrastructure/database';
 import type { PomodoroStats, SessionRecord, TimerPhase } from '@bot-twitch/shared';
 import logger from '../../utils/logger';
 
+type StatsRow = Database['public']['Tables']['pomodoro_stats']['Row'];
+
 /**
- * PomodoroStatsService
- * Handles tracking and persistence of pomodoro statistics
- * Scope Rule: Local to pomodoro-timer feature (only this feature uses it)
+ * PomodoroStatsService - Migrated to Supabase
+ * 
+ * Mantiene la misma interfaz pública que la versión JSON
+ * Scope Rule: Local a pomodoro-timer feature
+ * 
+ * CAMBIOS PRINCIPALES:
+ * - Reemplaza fs operations por queries Supabase
+ * - sessions[] se almacena como JSONB
+ * - Mantiene cache en memoria para reducir queries frecuentes
  */
 export class PomodoroStatsService {
-  private readonly statsPath: string;
-  private stats: Record<string, PomodoroStats> = {};
-
-  constructor(dataDir = './data') {
-    this.statsPath = path.join(dataDir, 'pomodoro-stats.json');
-    this.ensureDataDirectory(dataDir);
-    this.loadAllStats();
-  }
-
-  /**
-   * Ensure data directory exists
-   */
-  private ensureDataDirectory(dataDir: string): void {
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-      logger.info(`Created data directory: ${dataDir}`);
-    }
-  }
-
-  /**
-   * Load all statistics from file
-   */
-  private loadAllStats(): void {
-    try {
-      if (!fs.existsSync(this.statsPath)) {
-        this.stats = {};
-        this.saveAllStats();
-        logger.info('Created new pomodoro stats file');
-        return;
-      }
-
-      const data = fs.readFileSync(this.statsPath, 'utf-8');
-      this.stats = JSON.parse(data);
-      logger.info('Pomodoro statistics loaded successfully');
-    } catch (error) {
-      logger.error('Error loading pomodoro stats:', error);
-      this.stats = {};
-    }
-  }
-
-  /**
-   * Save all statistics to file
-   */
-  private saveAllStats(): void {
-    try {
-      fs.writeFileSync(this.statsPath, JSON.stringify(this.stats, null, 2), 'utf-8');
-    } catch (error) {
-      logger.error('Error saving pomodoro stats:', error);
-      throw error;
-    }
-  }
+  private statsCache: Map<string, PomodoroStats> = new Map();
+  private cacheExpiry: Map<string, number> = new Map();
+  private readonly CACHE_TTL_MS = 30000; // 30 segundos
 
   /**
    * Get date key in YYYY-MM-DD format
@@ -69,11 +28,96 @@ export class PomodoroStatsService {
   }
 
   /**
+   * Check if cache is valid for a date
+   */
+  private isCacheValid(dateKey: string): boolean {
+    const expiry = this.cacheExpiry.get(dateKey);
+    if (!expiry) return false;
+    return Date.now() < expiry;
+  }
+
+  /**
+   * Invalidate cache for a date
+   */
+  private invalidateCache(dateKey: string): void {
+    this.statsCache.delete(dateKey);
+    this.cacheExpiry.delete(dateKey);
+  }
+
+  /**
    * Ensure stats object exists for a given date
    */
-  private ensureStatsForDate(dateKey: string): PomodoroStats {
-    if (!this.stats[dateKey]) {
-      this.stats[dateKey] = {
+  private async ensureStatsForDate(dateKey: string): Promise<PomodoroStats> {
+    // Check cache first
+    if (this.isCacheValid(dateKey)) {
+      return this.statsCache.get(dateKey)!;
+    }
+
+    try {
+      // Try to fetch from DB
+      const { data, error } = await supabase
+        .from('pomodoro_stats')
+        .select('*')
+        .eq('date', dateKey)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+        logger.error(`Error fetching stats for ${dateKey}:`, error);
+        throw error;
+      }
+
+      if (data) {
+        const row = data as StatsRow;
+        // Convert DB format to PomodoroStats
+        const stats: PomodoroStats = {
+          date: row.date,
+          sessionsCompleted: row.sessions_completed,
+          shortBreaksTaken: row.short_breaks_taken,
+          longBreaksTaken: row.long_breaks_taken,
+          totalWorkTime: row.total_work_time,
+          sessions: row.sessions || [],
+        };
+
+        // Cache it
+        this.statsCache.set(dateKey, stats);
+        this.cacheExpiry.set(dateKey, Date.now() + this.CACHE_TTL_MS);
+        return stats;
+      }
+
+      // Create new stats entry
+      const newStats: PomodoroStats = {
+        date: dateKey,
+        sessionsCompleted: 0,
+        shortBreaksTaken: 0,
+        longBreaksTaken: 0,
+        totalWorkTime: 0,
+        sessions: [],
+      };
+
+      const { error: insertError } = await supabase
+        .from('pomodoro_stats')
+        .insert({
+          date: dateKey,
+          sessions_completed: 0,
+          short_breaks_taken: 0,
+          long_breaks_taken: 0,
+          total_work_time: 0,
+          sessions: [],
+        });
+
+      if (insertError) {
+        logger.error(`Error creating stats for ${dateKey}:`, insertError);
+        throw insertError;
+      }
+
+      // Cache it
+      this.statsCache.set(dateKey, newStats);
+      this.cacheExpiry.set(dateKey, Date.now() + this.CACHE_TTL_MS);
+      return newStats;
+    } catch (error) {
+      logger.error('Unexpected error ensuring stats:', error);
+      // Return empty stats as fallback
+      return {
         date: dateKey,
         sessionsCompleted: 0,
         shortBreaksTaken: 0,
@@ -82,16 +126,15 @@ export class PomodoroStatsService {
         sessions: [],
       };
     }
-    return this.stats[dateKey];
   }
 
   /**
    * Record a completed or cancelled session
    */
-  recordSession(session: SessionRecord): void {
+  async recordSession(session: SessionRecord): Promise<void> {
     try {
       const dateKey = this.getDateKey(new Date(session.startTime));
-      const dayStats = this.ensureStatsForDate(dateKey);
+      const dayStats = await this.ensureStatsForDate(dateKey);
 
       // Add session to history
       dayStats.sessions.push(session);
@@ -108,7 +151,26 @@ export class PomodoroStatsService {
         }
       }
 
-      this.saveAllStats();
+      // Update in DB
+      const { error } = await supabase
+        .from('pomodoro_stats')
+        .update({
+          sessions_completed: dayStats.sessionsCompleted,
+          short_breaks_taken: dayStats.shortBreaksTaken,
+          long_breaks_taken: dayStats.longBreaksTaken,
+          total_work_time: dayStats.totalWorkTime,
+          sessions: dayStats.sessions,
+        })
+        .eq('date', dateKey);
+
+      if (error) {
+        logger.error('Error updating stats:', error);
+        throw error;
+      }
+
+      // Invalidate cache to force refresh
+      this.invalidateCache(dateKey);
+
       logger.info(`Recorded ${session.type} session: completed=${session.completed}, duration=${session.durationMinutes}min`);
     } catch (error) {
       logger.error('Error recording session:', error);
@@ -119,68 +181,142 @@ export class PomodoroStatsService {
   /**
    * Get statistics for a specific date
    */
-  getStatsForDate(date: string): PomodoroStats | null {
-    return this.stats[date] || null;
+  async getStatsForDate(date: string): Promise<PomodoroStats | null> {
+    try {
+      return await this.ensureStatsForDate(date);
+    } catch (error) {
+      logger.error(`Error getting stats for ${date}:`, error);
+      return null;
+    }
   }
 
   /**
    * Get statistics for today
    */
-  getTodayStats(): PomodoroStats {
+  async getTodayStats(): Promise<PomodoroStats> {
     const dateKey = this.getDateKey();
-    return this.ensureStatsForDate(dateKey);
+    return await this.ensureStatsForDate(dateKey);
   }
 
   /**
    * Get statistics for a date range
    */
-  getStatsForDateRange(startDate: string, endDate: string): PomodoroStats[] {
-    const result: PomodoroStats[] = [];
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  async getStatsForDateRange(startDate: string, endDate: string): Promise<PomodoroStats[]> {
+    try {
+      const { data, error } = await supabase
+        .from('pomodoro_stats')
+        .select('*')
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
 
-    for (const dateKey in this.stats) {
-      const date = new Date(dateKey);
-      if (date >= start && date <= end) {
-        result.push(this.stats[dateKey]);
+      if (error) {
+        logger.error('Error fetching stats range:', error);
+        return [];
       }
-    }
 
-    return result.sort((a, b) => a.date.localeCompare(b.date));
+      return ((data || []) as StatsRow[]).map(row => ({
+        date: row.date,
+        sessionsCompleted: row.sessions_completed,
+        shortBreaksTaken: row.short_breaks_taken,
+        longBreaksTaken: row.long_breaks_taken,
+        totalWorkTime: row.total_work_time,
+        sessions: row.sessions || [],
+      }));
+    } catch (error) {
+      logger.error('Unexpected error getting stats range:', error);
+      return [];
+    }
   }
 
   /**
    * Get all statistics
    */
-  getAllStats(): Record<string, PomodoroStats> {
-    return { ...this.stats };
+  async getAllStats(): Promise<Record<string, PomodoroStats>> {
+    try {
+      const { data, error } = await supabase
+        .from('pomodoro_stats')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (error) {
+        logger.error('Error fetching all stats:', error);
+        return {};
+      }
+
+      const result: Record<string, PomodoroStats> = {};
+      for (const row of (data || []) as StatsRow[]) {
+        result[row.date] = {
+          date: row.date,
+          sessionsCompleted: row.sessions_completed,
+          shortBreaksTaken: row.short_breaks_taken,
+          longBreaksTaken: row.long_breaks_taken,
+          totalWorkTime: row.total_work_time,
+          sessions: row.sessions || [],
+        };
+      }
+
+      return result;
+    } catch (error) {
+      logger.error('Unexpected error getting all stats:', error);
+      return {};
+    }
   }
 
   /**
    * Get total sessions completed today
    */
-  getTotalSessionsToday(): number {
-    const todayStats = this.getTodayStats();
+  async getTotalSessionsToday(): Promise<number> {
+    const todayStats = await this.getTodayStats();
     return todayStats.sessionsCompleted;
   }
 
   /**
    * Clear statistics for a specific date
    */
-  clearStatsForDate(date: string): void {
-    if (this.stats[date]) {
-      delete this.stats[date];
-      this.saveAllStats();
+  async clearStatsForDate(date: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('pomodoro_stats')
+        .delete()
+        .eq('date', date);
+
+      if (error) {
+        logger.error(`Error clearing stats for ${date}:`, error);
+        throw error;
+      }
+
+      this.invalidateCache(date);
       logger.info(`Cleared stats for date: ${date}`);
+    } catch (error) {
+      logger.error('Error clearing stats:', error);
+      throw error;
     }
   }
 
   /**
    * Clear all statistics (use with caution)
    */
-  clearAllStats(): void {
-    this.stats = {};
-    this.saveAllStats();
-    logger.warn('All pomodoro statistics cleared');
+  async clearAllStats(): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('pomodoro_stats')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all workaround
+
+      if (error) {
+        logger.error('Error clearing all stats:', error);
+        throw error;
+      }
+
+      // Clear cache
+      this.statsCache.clear();
+      this.cacheExpiry.clear();
+
+      logger.warn('All pomodoro statistics cleared');
+    } catch (error) {
+      logger.error('Error clearing all stats:', error);
+      throw error;
+    }
   }
 }

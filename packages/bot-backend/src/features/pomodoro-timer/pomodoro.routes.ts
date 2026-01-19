@@ -68,9 +68,9 @@ export function createPomodoroRoutes(
    * POST /api/pomodoro/reset
    * Reset timer to initial work phase
    */
-  router.post('/reset', (req: Request, res: Response) => {
+  router.post('/reset', async (req: Request, res: Response) => {
     try {
-      timerService.reset();
+      await timerService.reset();
       const state = timerService.getState();
       res.json({ message: 'Timer reset', state });
     } catch (error) {
@@ -83,9 +83,9 @@ export function createPomodoroRoutes(
    * POST /api/pomodoro/skip
    * Skip to next phase
    */
-  router.post('/skip', (req: Request, res: Response) => {
+  router.post('/skip', async (req: Request, res: Response) => {
     try {
-      timerService.skip();
+      await timerService.skip();
       const state = timerService.getState();
       res.json({ message: 'Skipped to next phase', state });
     } catch (error) {
@@ -100,9 +100,9 @@ export function createPomodoroRoutes(
    * GET /api/pomodoro/config
    * Get current configuration
    */
-  router.get('/config', (req: Request, res: Response) => {
+  router.get('/config', async (req: Request, res: Response) => {
     try {
-      const config = configService.getConfig();
+      const config = await configService.load();
       res.json(config);
     } catch (error) {
       logger.error('Error getting config:', error);
@@ -115,7 +115,7 @@ export function createPomodoroRoutes(
    * Update configuration
    * Body: Partial<PomodoroConfig>
    */
-  router.put('/config', (req: Request, res: Response) => {
+  router.put('/config', async (req: Request, res: Response) => {
     try {
       const updates = req.body as Partial<PomodoroConfig>;
       
@@ -133,8 +133,8 @@ export function createPomodoroRoutes(
         return res.status(400).json({ error: 'Sessions before long break must be greater than 0' });
       }
 
-      timerService.updateConfig(updates);
-      const config = configService.getConfig();
+      await timerService.updateConfig(updates);
+      const config = await configService.load();
       res.json({ message: 'Configuration updated', config });
     } catch (error) {
       logger.error('Error updating config:', error);
@@ -146,11 +146,11 @@ export function createPomodoroRoutes(
    * POST /api/pomodoro/config/reset
    * Reset configuration to defaults
    */
-  router.post('/config/reset', (req: Request, res: Response) => {
+  router.post('/config/reset', async (req: Request, res: Response) => {
     try {
-      configService.resetToDefaults();
-      timerService.reloadConfig();
-      const config = configService.getConfig();
+      await configService.resetToDefaults();
+      await timerService.reloadConfig();
+      const config = await configService.load();
       res.json({ message: 'Configuration reset to defaults', config });
     } catch (error) {
       logger.error('Error resetting config:', error);
@@ -164,9 +164,9 @@ export function createPomodoroRoutes(
    * GET /api/pomodoro/stats/today
    * Get statistics for today
    */
-  router.get('/stats/today', (req: Request, res: Response) => {
+  router.get('/stats/today', async (req: Request, res: Response) => {
     try {
-      const stats = statsService.getTodayStats();
+      const stats = await statsService.getTodayStats();
       res.json(stats);
     } catch (error) {
       logger.error('Error getting today stats:', error);
@@ -178,7 +178,7 @@ export function createPomodoroRoutes(
    * GET /api/pomodoro/stats/:date
    * Get statistics for specific date (YYYY-MM-DD)
    */
-  router.get('/stats/:date', (req: Request, res: Response) => {
+  router.get('/stats/:date', async (req: Request, res: Response) => {
     try {
       const date = req.params.date as string;
       
@@ -187,7 +187,7 @@ export function createPomodoroRoutes(
         return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
       }
 
-      const stats = statsService.getStatsForDate(date);
+      const stats = await statsService.getStatsForDate(date);
       if (!stats) {
         return res.status(404).json({ error: 'No statistics found for this date' });
       }
@@ -204,7 +204,7 @@ export function createPomodoroRoutes(
    * Get statistics for date range
    * Query params: start=YYYY-MM-DD&end=YYYY-MM-DD
    */
-  router.get('/stats/range', (req: Request, res: Response) => {
+  router.get('/stats/range', async (req: Request, res: Response) => {
     try {
       const { start, end } = req.query;
 
@@ -217,7 +217,7 @@ export function createPomodoroRoutes(
         return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
       }
 
-      const stats = statsService.getStatsForDateRange(start as string, end as string);
+      const stats = await statsService.getStatsForDateRange(start as string, end as string);
       
       // Calculate totals
       const totalSessions = stats.reduce((sum, day) => sum + day.sessionsCompleted, 0);
@@ -240,9 +240,9 @@ export function createPomodoroRoutes(
    * GET /api/pomodoro/stats/all
    * Get all statistics
    */
-  router.get('/stats/all', (req: Request, res: Response) => {
+  router.get('/stats/all', async (req: Request, res: Response) => {
     try {
-      const allStats = statsService.getAllStats();
+      const allStats = await statsService.getAllStats();
       res.json(allStats);
     } catch (error) {
       logger.error('Error getting all stats:', error);
@@ -254,7 +254,7 @@ export function createPomodoroRoutes(
    * DELETE /api/pomodoro/stats/:date
    * Clear statistics for specific date
    */
-  router.delete('/stats/:date', (req: Request, res: Response) => {
+  router.delete('/stats/:date', async (req: Request, res: Response) => {
     try {
       const date = req.params.date as string;
       
@@ -262,7 +262,7 @@ export function createPomodoroRoutes(
         return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD' });
       }
 
-      statsService.clearStatsForDate(date);
+      await statsService.clearStatsForDate(date);
       res.json({ message: `Statistics cleared for ${date}` });
     } catch (error) {
       logger.error('Error clearing stats:', error);
