@@ -13,6 +13,9 @@ import { SessionCounter } from './components/SessionCounter';
 const PomodoroDisplay: React.FC = () => {
   const { state, isConnected } = usePomodoro();
 
+  console.log('[PomodoroDisplay] State:', state);
+  console.log('[PomodoroDisplay] isConnected:', isConnected);
+
   const connectionColor = isConnected ? '#10b981' : '#ef4444';
   const connectionGlow = isConnected ? '#10b98180' : '#ef444480';
 

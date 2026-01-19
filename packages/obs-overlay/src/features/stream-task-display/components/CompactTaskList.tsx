@@ -17,6 +17,9 @@ const CompactTaskList: React.FC<CompactTaskListProps> = ({
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  console.log('[CompactTaskList] Received tasks:', tasks);
+  console.log('[CompactTaskList] Loading:', loading);
+
   const totalTasks = useMemo(() => {
     return tasks.reduce((total, user) => {
       return total + (user.task?.length || 0) + (user.completed?.length || 0);

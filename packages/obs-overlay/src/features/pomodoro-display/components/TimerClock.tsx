@@ -1,10 +1,13 @@
 import React from 'react';
 
 interface TimerClockProps {
-  remainingSeconds: number;
+  remainingSeconds: number | null | undefined;
 }
 
-const formatTime = (totalSeconds: number): string => {
+const formatTime = (totalSeconds: number | null | undefined): string => {
+  if (totalSeconds === null || totalSeconds === undefined || isNaN(totalSeconds)) {
+    return '00:00';
+  }
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
