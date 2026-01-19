@@ -39,7 +39,7 @@ Bot modular para Twitch que permite gestionar tareas directamente desde el chat.
 
 - **Backend:** Node.js con TypeScript, Express, tmi.js (cliente de Twitch IRC)
 - **Frontend (Overlay):** React 19 con Vite
-- **Almacenamiento:** Sistema de archivos JSON (persistencia simple)
+- **Almacenamiento:** Supabase (Postgres con Realtime) + archivos JSON legacy para migraciones
 - **Testing:** Jest para pruebas unitarias
 - **Calidad de código:** Biome para linting y formateo
 - **Arquitectura:** Monorepo con pnpm workspaces
@@ -318,6 +318,7 @@ pnpm install
 # 3. Configurar variables de entorno
 cp .env.example .env
 # Editar .env con tus credenciales
+# Para Supabase puedes usar .env.example.supabase como guía
 
 # También copiar .env en el paquete del backend
 cp .env packages/bot-backend/.env
@@ -341,6 +342,14 @@ PORT=3000
 OAUTH_TOKEN=oauth:tu_token_aqui
 TWITCH_USERNAME=nombre_del_bot
 CHANEL_NAME=canal_donde_opera
+
+# Supabase (backend)
+SUPABASE_URL=https://tu-proyecto.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key
+
+# Supabase (overlay)
+VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
+VITE_SUPABASE_ANON_KEY=tu_anon_key
 
 # Credenciales de Spotify (opcional)
 CLIENT_ID=tu_client_id
@@ -398,7 +407,7 @@ LÍMITES POR USUARIO
 FORMATO DE DATOS
 - Las tareas se almacenan en MAYÚSCULAS internamente
 - Se muestran en minúsculas al usuario para legibilidad
-- Persistencia en archivo JSON en ./data/tasks.json
+- Persistencia principal en Supabase (legacy JSON en ./data/tasks.json solo para backup/migración)
 ```
 
 ---
@@ -727,7 +736,6 @@ mv component packages/obs-overlay/src/shared/components/
 ### Autor
 
 **Juan Carlos López**  
-Desarrollador enfocado en soluciones que mejoran la experiencia de comunidades en línea.
 
 ### Licencia
 
