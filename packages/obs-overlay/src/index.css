@@ -5,7 +5,6 @@
 @layer base {
   * {
     box-sizing: border-box;
-    pointer-events: none;
     will-change: auto;
   }
 
@@ -17,12 +16,14 @@
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    pointer-events: none;
   }
 
   #root {
     width: 100vw;
     height: 100vh;
     background: transparent !important;
+    pointer-events: none;
   }
 
   html, body, #root {

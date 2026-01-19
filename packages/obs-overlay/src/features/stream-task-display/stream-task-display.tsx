@@ -1,4 +1,4 @@
-import { useTaskConnection } from './hooks/use-task-connection';
+import { useTaskConnectionSupabase as useTaskConnection } from './hooks/use-task-connection-supabase';
 import CompactTaskList from './components/CompactTaskList';
 
 /**
