@@ -3,6 +3,10 @@
  * Exports all task management functionality
  */
 
-export * from './commands';
-export { default as taskManagementService } from './task-management.service';
-export * from './models';
+export * from "./commands";
+// Old service (JSON-based, then Supabase direct)
+// export { default as taskManagementService } from './task-management.service.supabase';
+
+// New secure service (with rate limiting and validation)
+export { default as taskManagementService } from "./task-management.service.secure";
+export * from "./models";
