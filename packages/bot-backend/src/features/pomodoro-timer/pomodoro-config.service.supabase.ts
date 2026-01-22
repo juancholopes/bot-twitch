@@ -1,6 +1,6 @@
 import { supabase } from '@infrastructure/database';
 import type { PomodoroConfig } from '@bot-twitch/shared';
-import logger from '../../utils/logger';
+import logger from '@infrastructure/logging/logger';
 
 /**
  * PomodoroConfigService - Migrated to Supabase

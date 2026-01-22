@@ -1,6 +1,6 @@
 import { supabase, type Database } from '@infrastructure/database';
 import type { PomodoroStats, SessionRecord, TimerPhase } from '@bot-twitch/shared';
-import logger from '../../utils/logger';
+import logger from '@infrastructure/logging/logger';
 
 type StatsRow = Database['public']['Tables']['pomodoro_stats']['Row'];
 
