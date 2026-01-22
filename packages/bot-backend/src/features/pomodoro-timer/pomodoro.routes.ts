@@ -3,7 +3,7 @@ import type { PomodoroConfig } from '@bot-twitch/shared';
 import { PomodoroTimerService } from './pomodoro-timer.service';
 import { PomodoroConfigService } from './pomodoro-config.service';
 import { PomodoroStatsService } from './pomodoro-stats.service';
-import logger from '../../utils/logger';
+import logger from '@infrastructure/logging/logger';
 
 /**
  * Create Pomodoro routes

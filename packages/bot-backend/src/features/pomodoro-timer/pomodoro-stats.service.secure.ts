@@ -1,21 +1,26 @@
 import { supabase, type Database } from '@infrastructure/database';
-import type { PomodoroStats, SessionRecord, TimerPhase } from '@bot-twitch/shared';
+import type { PomodoroStats, SessionRecord } from '@bot-twitch/shared';
+import { getServerIdentifier, parseSupabaseError } from '@bot-twitch/shared';
 import logger from '@infrastructure/logging/logger';
 
 type StatsRow = Database['public']['Tables']['pomodoro_stats']['Row'];
 
 /**
- * PomodoroStatsService - Migrated to Supabase
- * 
- * Mantiene la misma interfaz pública que la versión JSON
+ * PomodoroStatsService - Secure Implementation
+ *
+ * Uses Supabase secure wrapper functions with:
+ * - Rate limiting protection
+ * - Input validation
+ * - SQL injection prevention
+ *
  * Scope Rule: Local a pomodoro-timer feature
- * 
- * CAMBIOS PRINCIPALES:
- * - Reemplaza fs operations por queries Supabase
- * - sessions[] se almacena como JSONB
- * - Mantiene cache en memoria para reducir queries frecuentes
+ *
+ * CAMBIOS vs versión anterior:
+ * - Usa secure_update_pomodoro_stats en lugar de update directo
+ * - Incluye manejo de errores de rate limiting
+ * - Mantiene cache en memoria para reducir queries
  */
-export class PomodoroStatsService {
+export class PomodoroStatsServiceSecure {
   private statsCache: Map<string, PomodoroStats> = new Map();
   private cacheExpiry: Map<string, number> = new Map();
   private readonly CACHE_TTL_MS = 30000; // 30 segundos
@@ -46,6 +51,7 @@ export class PomodoroStatsService {
 
   /**
    * Ensure stats object exists for a given date
+   * READ operations don't have rate limits
    */
   private async ensureStatsForDate(dateKey: string): Promise<PomodoroStats> {
     // Check cache first
@@ -54,14 +60,15 @@ export class PomodoroStatsService {
     }
 
     try {
-      // Try to fetch from DB
+      // Try to fetch from DB (using public view for reads)
       const { data, error } = await supabase
         .from('pomodoro_stats')
         .select('*')
         .eq('date', dateKey)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = no rows
         logger.error(`Error fetching stats for ${dateKey}:`, error);
         throw error;
       }
@@ -75,7 +82,7 @@ export class PomodoroStatsService {
           shortBreaksTaken: row.short_breaks_taken,
           longBreaksTaken: row.long_breaks_taken,
           totalWorkTime: row.total_work_time,
-          sessions: row.sessions || [],
+          sessions: (row.sessions as SessionRecord[]) || [],
         };
 
         // Cache it
@@ -84,7 +91,7 @@ export class PomodoroStatsService {
         return stats;
       }
 
-      // Create new stats entry
+      // Return empty stats if not found
       const newStats: PomodoroStats = {
         date: dateKey,
         sessionsCompleted: 0,
@@ -94,25 +101,6 @@ export class PomodoroStatsService {
         sessions: [],
       };
 
-      const { error: insertError } = await supabase
-        .from('pomodoro_stats')
-        .insert({
-          date: dateKey,
-          sessions_completed: 0,
-          short_breaks_taken: 0,
-          long_breaks_taken: 0,
-          total_work_time: 0,
-          sessions: [],
-        });
-
-      if (insertError) {
-        logger.error(`Error creating stats for ${dateKey}:`, insertError);
-        throw insertError;
-      }
-
-      // Cache it
-      this.statsCache.set(dateKey, newStats);
-      this.cacheExpiry.set(dateKey, Date.now() + this.CACHE_TTL_MS);
       return newStats;
     } catch (error) {
       logger.error('Unexpected error ensuring stats:', error);
@@ -130,8 +118,12 @@ export class PomodoroStatsService {
 
   /**
    * Record a completed or cancelled session
+   * Uses secure function with rate limiting
    */
-  async recordSession(session: SessionRecord): Promise<void> {
+  async recordSession(
+    session: SessionRecord,
+    context?: { identifier?: string }
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       const dateKey = this.getDateKey(new Date(session.startTime));
       const dayStats = await this.ensureStatsForDate(dateKey);
@@ -151,35 +143,42 @@ export class PomodoroStatsService {
         }
       }
 
-      // Update in DB
-      const { error } = await supabase
-        .from('pomodoro_stats')
-        .update({
-          sessions_completed: dayStats.sessionsCompleted,
-          short_breaks_taken: dayStats.shortBreaksTaken,
-          long_breaks_taken: dayStats.longBreaksTaken,
-          total_work_time: dayStats.totalWorkTime,
-          sessions: dayStats.sessions,
-        })
-        .eq('date', dateKey);
+      // Use secure function to update
+      const identifier = context?.identifier || getServerIdentifier();
+
+      const { data: success, error } = await supabase.rpc('secure_update_pomodoro_stats', {
+        p_date: dateKey,
+        p_sessions_completed: dayStats.sessionsCompleted,
+        p_short_breaks: dayStats.shortBreaksTaken,
+        p_long_breaks: dayStats.longBreaksTaken,
+        p_total_work_time: dayStats.totalWorkTime,
+        p_sessions: dayStats.sessions as any,
+        p_identifier: identifier,
+      });
 
       if (error) {
-        logger.error('Error updating stats:', error);
-        throw error;
+        const parsed = parseSupabaseError(error);
+        logger.error('Error updating stats:', parsed.message);
+        return { success: false, message: parsed.userMessage };
       }
 
       // Invalidate cache to force refresh
       this.invalidateCache(dateKey);
 
-      logger.info(`Recorded ${session.type} session: completed=${session.completed}, duration=${session.durationMinutes}min`);
+      logger.info(
+        `Recorded ${session.type} session: completed=${session.completed}, duration=${session.durationMinutes}min`
+      );
+
+      return { success: true };
     } catch (error) {
       logger.error('Error recording session:', error);
-      throw error;
+      return { success: false, message: 'Error inesperado al guardar sesión' };
     }
   }
 
   /**
    * Get statistics for a specific date
+   * READ operation - no rate limit
    */
   async getStatsForDate(date: string): Promise<PomodoroStats | null> {
     try {
@@ -192,6 +191,7 @@ export class PomodoroStatsService {
 
   /**
    * Get statistics for today
+   * READ operation - no rate limit
    */
   async getTodayStats(): Promise<PomodoroStats> {
     const dateKey = this.getDateKey();
@@ -200,6 +200,7 @@ export class PomodoroStatsService {
 
   /**
    * Get statistics for a date range
+   * READ operation - no rate limit
    */
   async getStatsForDateRange(startDate: string, endDate: string): Promise<PomodoroStats[]> {
     try {
@@ -215,13 +216,13 @@ export class PomodoroStatsService {
         return [];
       }
 
-      return ((data || []) as StatsRow[]).map(row => ({
+      return ((data || []) as StatsRow[]).map((row) => ({
         date: row.date,
         sessionsCompleted: row.sessions_completed,
         shortBreaksTaken: row.short_breaks_taken,
         longBreaksTaken: row.long_breaks_taken,
         totalWorkTime: row.total_work_time,
-        sessions: row.sessions || [],
+        sessions: (row.sessions as SessionRecord[]) || [],
       }));
     } catch (error) {
       logger.error('Unexpected error getting stats range:', error);
@@ -231,6 +232,7 @@ export class PomodoroStatsService {
 
   /**
    * Get all statistics
+   * READ operation - no rate limit
    */
   async getAllStats(): Promise<Record<string, PomodoroStats>> {
     try {
@@ -252,7 +254,7 @@ export class PomodoroStatsService {
           shortBreaksTaken: row.short_breaks_taken,
           longBreaksTaken: row.long_breaks_taken,
           totalWorkTime: row.total_work_time,
-          sessions: row.sessions || [],
+          sessions: (row.sessions as SessionRecord[]) || [],
         };
       }
 
@@ -265,6 +267,7 @@ export class PomodoroStatsService {
 
   /**
    * Get total sessions completed today
+   * READ operation - no rate limit
    */
   async getTotalSessionsToday(): Promise<number> {
     const todayStats = await this.getTodayStats();
@@ -273,13 +276,11 @@ export class PomodoroStatsService {
 
   /**
    * Clear statistics for a specific date
+   * ADMIN operation - uses direct delete
    */
   async clearStatsForDate(date: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('pomodoro_stats')
-        .delete()
-        .eq('date', date);
+      const { error } = await supabase.from('pomodoro_stats').delete().eq('date', date);
 
       if (error) {
         logger.error(`Error clearing stats for ${date}:`, error);
@@ -296,6 +297,7 @@ export class PomodoroStatsService {
 
   /**
    * Clear all statistics (use with caution)
+   * ADMIN operation - uses direct delete
    */
   async clearAllStats(): Promise<void> {
     try {
@@ -317,6 +319,41 @@ export class PomodoroStatsService {
     } catch (error) {
       logger.error('Error clearing all stats:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Update stats manually (for migrations or corrections)
+   * Uses secure function with rate limiting
+   */
+  async updateStats(
+    stats: PomodoroStats,
+    context?: { identifier?: string }
+  ): Promise<{ success: boolean; message?: string }> {
+    try {
+      const identifier = context?.identifier || getServerIdentifier();
+
+      const { data: success, error } = await supabase.rpc('secure_update_pomodoro_stats', {
+        p_date: stats.date,
+        p_sessions_completed: stats.sessionsCompleted,
+        p_short_breaks: stats.shortBreaksTaken,
+        p_long_breaks: stats.longBreaksTaken,
+        p_total_work_time: stats.totalWorkTime,
+        p_sessions: stats.sessions as any,
+        p_identifier: identifier,
+      });
+
+      if (error) {
+        const parsed = parseSupabaseError(error);
+        logger.error('Error updating stats manually:', parsed.message);
+        return { success: false, message: parsed.userMessage };
+      }
+
+      this.invalidateCache(stats.date);
+      return { success: true };
+    } catch (error) {
+      logger.error('Unexpected error updating stats:', error);
+      return { success: false, message: 'Error inesperado' };
     }
   }
 }
