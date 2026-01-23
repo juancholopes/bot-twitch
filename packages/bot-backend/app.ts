@@ -1,6 +1,6 @@
 import TwitchBot from "./src/bot";
 import WebServer from "./src/server";
-import logger from "./src/utils/logger";
+import logger from "./src/infrastructure/logging/logger";
 
 class Application {
 	private bot: TwitchBot;

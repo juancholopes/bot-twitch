@@ -1,14 +1,19 @@
-import { EventEmitter } from 'events';
-import type { PomodoroConfig, PomodoroState, TimerPhase, SessionRecord } from '@bot-twitch/shared';
-import logger from '../../utils/logger';
-import { PomodoroConfigService } from './pomodoro-config.service';
-import { PomodoroStatsService } from './pomodoro-stats.service';
+import { EventEmitter } from "events";
+import type {
+  PomodoroConfig,
+  PomodoroState,
+  TimerPhase,
+  SessionRecord,
+} from "@bot-twitch/shared";
+import logger from "@infrastructure/logging/logger";
+import { PomodoroConfigServiceSecure } from "./pomodoro-config.service.secure";
+import { PomodoroStatsServiceSecure } from "./pomodoro-stats.service.secure";
 
 /**
  * PomodoroTimerService
  * Core timer logic with automatic transitions and session management
  * Scope Rule: Local to pomodoro-timer feature (only this feature uses it)
- * 
+ *
  * Events:
  * - 'tick': Emitted every second with current state
  * - 'phaseChanged': Emitted when transitioning between phases
@@ -25,8 +30,8 @@ export class PomodoroTimerService extends EventEmitter {
   private initPromise: Promise<void>;
 
   constructor(
-    private configService: PomodoroConfigService,
-    private statsService: PomodoroStatsService
+    private configService: PomodoroConfigServiceSecure,
+    private statsService: PomodoroStatsServiceSecure,
   ) {
     super();
     // Set temporary default config
@@ -37,7 +42,7 @@ export class PomodoroTimerService extends EventEmitter {
       sessionsBeforeLongBreak: 5,
     };
     this.state = this.initializeState();
-    
+
     // Initialize asynchronously
     this.initPromise = this.initialize();
   }
@@ -49,19 +54,20 @@ export class PomodoroTimerService extends EventEmitter {
     try {
       // Load config from Supabase
       this.config = await this.configService.load();
-      
+
       // Load total sessions today from stats
-      const totalSessionsToday = await this.statsService.getTotalSessionsToday();
-      
+      const totalSessionsToday =
+        await this.statsService.getTotalSessionsToday();
+
       // Update state with loaded config and stats
       this.state.remainingSeconds = this.config.workDuration * 60;
       this.state.totalSessionsToday = totalSessionsToday;
-      
+
       // Auto-start as per requirements
-      logger.info('Pomodoro Timer: Auto-starting with loaded configuration');
+      logger.info("Pomodoro Timer: Auto-starting with loaded configuration");
       this.start();
     } catch (error) {
-      logger.error('Failed to initialize Pomodoro Timer:', error);
+      logger.error("Failed to initialize Pomodoro Timer:", error);
       // Fallback to defaults and start anyway
       this.start();
     }
@@ -72,7 +78,7 @@ export class PomodoroTimerService extends EventEmitter {
    */
   private initializeState(): PomodoroState {
     return {
-      phase: 'work',
+      phase: "work",
       remainingSeconds: this.config.workDuration * 60,
       isRunning: false,
       sessionCount: 0,
@@ -85,21 +91,24 @@ export class PomodoroTimerService extends EventEmitter {
    */
   start(): void {
     if (this.state.isRunning) {
-      logger.warn('Timer is already running');
+      logger.warn("Timer is already running");
       return;
     }
 
     this.state.isRunning = true;
     this.currentSessionStartTime = new Date();
-    this.state.currentSessionStartTime = this.currentSessionStartTime.toISOString();
+    this.state.currentSessionStartTime =
+      this.currentSessionStartTime.toISOString();
 
     // Start interval (tick every second)
     this.intervalId = setInterval(() => {
       this.tick();
     }, 1000);
 
-    logger.info(`Timer started: phase=${this.state.phase}, duration=${this.state.remainingSeconds}s`);
-    this.emit('resumed', this.state);
+    logger.info(
+      `Timer started: phase=${this.state.phase}, duration=${this.state.remainingSeconds}s`,
+    );
+    this.emit("resumed", this.state);
   }
 
   /**
@@ -107,12 +116,12 @@ export class PomodoroTimerService extends EventEmitter {
    */
   pause(): void {
     if (!this.state.isRunning) {
-      logger.warn('Timer is not running');
+      logger.warn("Timer is not running");
       return;
     }
 
     this.state.isRunning = false;
-    
+
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -123,8 +132,8 @@ export class PomodoroTimerService extends EventEmitter {
       this.recordSession(false);
     }
 
-    logger.info('Timer paused');
-    this.emit('paused', this.state);
+    logger.info("Timer paused");
+    this.emit("paused", this.state);
   }
 
   /**
@@ -147,7 +156,7 @@ export class PomodoroTimerService extends EventEmitter {
     // Reset to work phase
     const totalSessionsToday = await this.statsService.getTotalSessionsToday();
     this.state = {
-      phase: 'work',
+      phase: "work",
       remainingSeconds: this.config.workDuration * 60,
       isRunning: false,
       sessionCount: 0,
@@ -156,8 +165,8 @@ export class PomodoroTimerService extends EventEmitter {
 
     this.currentSessionStartTime = null;
 
-    logger.info('Timer reset to work phase');
-    this.emit('reset', this.state);
+    logger.info("Timer reset to work phase");
+    this.emit("reset", this.state);
   }
 
   /**
@@ -199,7 +208,7 @@ export class PomodoroTimerService extends EventEmitter {
     }
 
     // Emit tick event for WebSocket updates
-    this.emit('tick', this.state);
+    this.emit("tick", this.state);
   }
 
   /**
@@ -208,7 +217,7 @@ export class PomodoroTimerService extends EventEmitter {
   private completeCurrentPhase(): void {
     if (this.currentSessionStartTime) {
       this.recordSession(true);
-      this.emit('sessionCompleted', {
+      this.emit("sessionCompleted", {
         phase: this.state.phase,
         sessionCount: this.state.sessionCount,
       });
@@ -224,7 +233,9 @@ export class PomodoroTimerService extends EventEmitter {
     }
 
     const endTime = new Date();
-    const durationMinutes = Math.floor((endTime.getTime() - this.currentSessionStartTime.getTime()) / 60000);
+    const durationMinutes = Math.floor(
+      (endTime.getTime() - this.currentSessionStartTime.getTime()) / 60000,
+    );
 
     const session: SessionRecord = {
       startTime: this.currentSessionStartTime.toISOString(),
@@ -236,7 +247,7 @@ export class PomodoroTimerService extends EventEmitter {
 
     // No bloquear el loop principal; loguear errores de Supabase
     void this.statsService.recordSession(session).catch((error) => {
-      logger.error('Error recording session statistics:', error);
+      logger.error("Error recording session statistics:", error);
     });
     this.currentSessionStartTime = null;
   }
@@ -248,37 +259,39 @@ export class PomodoroTimerService extends EventEmitter {
     const { phase, sessionCount } = this.state;
     const previousPhase = phase;
 
-    if (phase === 'work') {
+    if (phase === "work") {
       // Increment session count after completing work
       this.state.sessionCount++;
-      const totalSessionsToday = await this.statsService.getTotalSessionsToday();
+      const totalSessionsToday =
+        await this.statsService.getTotalSessionsToday();
       this.state.totalSessionsToday = totalSessionsToday;
 
       // Decide if it's short break or long break
       if (this.state.sessionCount % this.config.sessionsBeforeLongBreak === 0) {
-        this.state.phase = 'longBreak';
+        this.state.phase = "longBreak";
         this.state.remainingSeconds = this.config.longBreakDuration * 60;
       } else {
-        this.state.phase = 'shortBreak';
+        this.state.phase = "shortBreak";
         this.state.remainingSeconds = this.config.shortBreakDuration * 60;
       }
     } else {
       // From any break, return to work
-      this.state.phase = 'work';
+      this.state.phase = "work";
       this.state.remainingSeconds = this.config.workDuration * 60;
 
       // Reset cycle after long break
-      if (previousPhase === 'longBreak') {
+      if (previousPhase === "longBreak") {
         this.state.sessionCount = 0;
       }
     }
 
     // Reset session start time for new phase
     this.currentSessionStartTime = new Date();
-    this.state.currentSessionStartTime = this.currentSessionStartTime.toISOString();
+    this.state.currentSessionStartTime =
+      this.currentSessionStartTime.toISOString();
 
     logger.info(`Phase transition: ${previousPhase} → ${this.state.phase}`);
-    this.emit('phaseChanged', this.state);
+    this.emit("phaseChanged", this.state);
   }
 
   /**
@@ -297,7 +310,7 @@ export class PomodoroTimerService extends EventEmitter {
     await this.configService.save(updatedConfig);
     this.config = updatedConfig;
     this.applyConfigToState(updatedConfig);
-    logger.info('Pomodoro configuration updated');
+    logger.info("Pomodoro configuration updated");
   }
 
   /**
@@ -307,16 +320,16 @@ export class PomodoroTimerService extends EventEmitter {
     const freshConfig = await this.configService.load();
     this.config = freshConfig;
     this.applyConfigToState(freshConfig);
-    logger.info('Pomodoro configuration reloaded');
+    logger.info("Pomodoro configuration reloaded");
   }
 
   /**
    * Apply configuration durations to current phase
    */
   private applyConfigToState(config: PomodoroConfig): void {
-    if (this.state.phase === 'work') {
+    if (this.state.phase === "work") {
       this.state.remainingSeconds = config.workDuration * 60;
-    } else if (this.state.phase === 'shortBreak') {
+    } else if (this.state.phase === "shortBreak") {
       this.state.remainingSeconds = config.shortBreakDuration * 60;
     } else {
       this.state.remainingSeconds = config.longBreakDuration * 60;
@@ -337,6 +350,6 @@ export class PomodoroTimerService extends EventEmitter {
     }
 
     this.removeAllListeners();
-    logger.info('Pomodoro Timer Service destroyed');
+    logger.info("Pomodoro Timer Service destroyed");
   }
 }
