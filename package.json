@@ -15,10 +15,15 @@
 		"test:coverage": "pnpm --filter @bot-twitch/bot-backend test:coverage",
 		"clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
 	},
-	"keywords": ["twitch", "bot", "obs", "overlay"],
+	"keywords": [
+		"twitch",
+		"bot",
+		"obs",
+		"overlay"
+	],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"concurrently": "^9.2.1"
+		"concurrently": "^9.2.4"
 	}
 }
